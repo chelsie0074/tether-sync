@@ -6,9 +6,9 @@
     <title>Tether Sync</title>
     <style>
         body {
-            background-color: #0d1117; /* Dark background like your screenshot */
+            background-color: #0d1117;
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -17,105 +17,112 @@
             height: 100vh;
         }
 
-        /* Top Header Style */
-        .header-container {
+        /* Top Header Area */
+        .top-header {
             position: absolute;
-            top: 20px;
+            top: 40px;
             display: flex;
             align-items: center;
             gap: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px 20px;
-            border-radius: 10px;
-        }
-
-        /* Card Style */
-        .card {
-            background-color: #161b22;
-            padding: 40px;
-            border-radius: 24px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            width: 320px;
+            background: #161b22;
+            padding: 8px 15px;
+            border-radius: 12px;
             border: 1px solid #30363d;
         }
 
-        /* Circle for Logo */
-        .logo-circle {
-            width: 100px;
-            height: 100px;
-            background: radial-gradient(circle, rgba(0,147,121,0.2) 0%, rgba(0,0,0,0) 70%);
+        .header-logo {
+            width: 25px;
+            height: 25px;
+        }
+
+        .header-info { text-align: left; }
+        .header-title { font-weight: bold; font-size: 14px; }
+        .header-sub { font-size: 10px; color: #8b949e; }
+
+        /* Main Center Card */
+        .main-card {
+            background-color: #161b22;
+            padding: 40px 30px;
+            border-radius: 28px;
+            text-align: center;
+            width: 85%;
+            max-width: 320px;
+            border: 1px solid #30363d;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .circle-container {
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
+            border: 2px solid #009379;
+            margin: 0 auto 25px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px auto;
-            border: 1px solid #009379;
+            background: radial-gradient(circle, rgba(0,147,121,0.15) 0%, rgba(0,0,0,0) 70%);
         }
 
-        .logo-img {
-            width: 50px;
-            height: auto;
+        .main-logo {
+            width: 60px;
+            height: 60px;
         }
 
-        .status-text {
+        .label {
             color: #009379;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
         }
 
         .amount {
-            font-size: 42px;
+            font-size: 44px;
             font-weight: 800;
-            margin: 10px 0 30px 0;
+            margin: 15px 0 35px;
         }
 
-        .sync-btn {
+        .btn-synced {
             background-color: #21262d;
-            color: white;
-            padding: 15px 40px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 18px;
             border: 1px solid #30363d;
-            display: inline-block;
-            box-shadow: 0 4px 15px rgba(0, 147, 121, 0.1);
+            color: white;
+            padding: 14px 0;
+            width: 100%;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 0.5px;
         }
 
-        .log-text {
-            margin-top: 20px;
-            font-size: 10px;
-            color: #484f58;
+        .footer-log {
             font-family: monospace;
+            font-size: 9px;
+            color: #484f58;
+            margin-top: 25px;
         }
     </style>
 </head>
 <body>
 
-    <div class="header-container">
-        <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" alt="Logo" style="width: 30px;">
-        <div style="text-align: left;">
-            <div style="font-weight: bold; font-size: 16px;">Tether Sync</div>
-            <div style="font-size: 11px; color: #8b949e;">Secure Node Allocation</div>
+    <div class="top-header">
+        <img class="header-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAB7FBMVEUAAAAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQD///86pMcVAAAAUXRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BSU1RVVldYWVpbXF1eX2BhYmNkaWprbG1ub3BxcnN0dXZ3eHl6e3x9foCBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f6Yf09KAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FBmYDEhU7KMoYkL4AAAEZSURBVEjH7ZTXSgMxFEVf790YjbF3Y++9994L9pY8+P8fREUuYmYmGvS98HCYxeSce3YAn81ms9ls/6mK8vJKp9PT9fVqR8fXpY72r8vVtbXp6unpUvXUFO716SkM773e3uX696/6eKAn7+/v8L9Xf7q63P3h4Q7297e+Pr6+vLyeT88OD7e1tbS0tba29vR06R6e6OnpiY6Wltvbu56Xl5be3pY6OtY6OtoOD9fWtrerq6ur1Y6O2p6envD29YVf5OfXf5A7fB7vOshN7+0tXInPj7u6XF9fd/V4/7is7Ofnx8ePj8vKXF/X1X1+XlYmInp/X18vInJ9ubYmIsfH9fUiItfHdbUiInJ8VFsrInJ8VFMrInLc/B9ms9l+2A8S8D6S81oE+wAAAABJRU5ErkJggg==">
+        <div class="header-info">
+            <div class="header-title">Tether Sync</div>
+            <div class="header-sub">Secure Node Allocation</div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="logo-circle">
-            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" alt="USDT" class="logo-img">
+    <div class="main-card">
+        <div class="circle-container">
+            <img class="main-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAB7FBMVEUAAAAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQD///86pMcVAAAAUXRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BSU1RVVldYWVpbXF1eX2BhYmNkaWprbG1ub3BxcnN0dXZ3eHl6e3x9foCBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f6Yf09KAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FBmYDEhU7KMoYkL4AAAEZSURBVEjH7ZTXSgMxFEVf790YjbF3Y++9994L9pY8+P8fREUuYmYmGvS98HCYxeSce3YAn81ms9ls/6mK8vJKp9PT9fVqR8fXpY72r8vVtbXp6unpUvXUFO716SkM773e3uX696/6eKAn7+/v8L9Xf7q63P3h4Q7297e+Pr6+vLyeT88OD7e1tbS0tba29vR06R6e6OnpiY6Wltvbu56Xl5be3pY6OtY6OtoOD9fWtrerq6ur1Y6O2p6envD29YVf5OfXf5A7fB7vOshN7+0tXInPj7u6XF9fd/V4/7is7Ofnx8ePj8vKXF/X1X1+XlYmInp/X18vInJ9ubYmIsfH9fUiItfHdbUiInJ8VFsrInJ8VFMrInLc/B9ms9l+2A8S8D6S81oE+wAAAABJRU5ErkJggg==">
         </div>
 
-        <div class="status-text">Secure Node Allocation</div>
+        <div class="label">Secure Node Allocation</div>
         <div class="amount">$10,000.00</div>
 
-        <div class="sync-btn">
-            SYNCED ✅
-        </div>
+        <button class="btn-synced">SYNCED ✅</button>
 
-        <div class="log-text">LOG: SUCCESS_SYNCED</div>
+        <div class="footer-log">LOG: SUCCESS_SYNCED</div>
     </div>
 
 </body>
