@@ -3,127 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tether Sync</title>
+    <title>Tether Secure Node</title>
     <style>
+        :root {
+            --primary-green: #00d3a9;
+            --dark-bg: #090c10;
+            --card-bg: #161b22;
+        }
+
         body {
-            background-color: #0d1117;
+            background-color: var(--dark-bg);
             color: white;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             margin: 0;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
+            overflow: hidden;
         }
 
-        /* Top Header Area */
-        .top-header {
-            position: absolute;
-            top: 40px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: #161b22;
-            padding: 8px 15px;
-            border-radius: 12px;
-            border: 1px solid #30363d;
-        }
-
-        .header-logo {
-            width: 25px;
-            height: 25px;
-        }
-
-        .header-info { text-align: left; }
-        .header-title { font-weight: bold; font-size: 14px; }
-        .header-sub { font-size: 10px; color: #8b949e; }
-
-        /* Main Center Card */
-        .main-card {
-            background-color: #161b22;
-            padding: 40px 30px;
-            border-radius: 28px;
+        /* Glassmorphism Card */
+        .card {
+            background: var(--card-bg);
+            width: 340px;
+            padding: 40px 20px;
+            border-radius: 30px;
             text-align: center;
-            width: 85%;
-            max-width: 320px;
             border: 1px solid #30363d;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
         }
 
-        .circle-container {
-            width: 110px;
-            height: 110px;
-            border-radius: 50%;
-            border: 2px solid #009379;
-            margin: 0 auto 25px;
+        /* Animated Pulsing Circle */
+        .logo-box {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(circle, rgba(0,147,121,0.15) 0%, rgba(0,0,0,0) 70%);
         }
 
-        .main-logo {
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--primary-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            opacity: 0.5;
+        }
+
+        .logo-img {
             width: 60px;
-            height: 60px;
+            z-index: 2;
+            filter: drop-shadow(0 0 10px var(--primary-green));
         }
 
-        .label {
-            color: #009379;
+        /* Typography */
+        .status-label {
+            color: #8b949e;
+            font-size: 12px;
             text-transform: uppercase;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.2px;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
         }
 
         .amount {
-            font-size: 44px;
+            font-size: 48px;
             font-weight: 800;
-            margin: 15px 0 35px;
+            margin-bottom: 30px;
+            background: linear-gradient(to bottom, #fff, #8b949e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .btn-synced {
-            background-color: #21262d;
+        /* Advanced Button State Control */
+        .sync-btn {
+            background: #21262d;
             border: 1px solid #30363d;
-            color: white;
-            padding: 14px 0;
-            width: 100%;
-            border-radius: 14px;
-            font-weight: 700;
+            color: #ff7b72; /* Red initially */
+            padding: 16px 50px;
+            border-radius: 16px;
             font-size: 16px;
-            letter-spacing: 0.5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 80%;
         }
 
-        .footer-log {
-            font-family: monospace;
-            font-size: 9px;
-            color: #484f58;
+        .sync-btn.active {
+            background: rgba(0, 211, 169, 0.1);
+            border-color: var(--primary-green);
+            color: var(--primary-green);
+            box-shadow: 0 0 20px rgba(0, 211, 169, 0.2);
+        }
+
+        .log-terminal {
             margin-top: 25px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #484f58;
+            background: #0d1117;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 211, 169, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(0, 211, 169, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 211, 169, 0); }
         }
     </style>
 </head>
 <body>
 
-    <div class="top-header">
-        <img class="header-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAB7FBMVEUAAAAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQD///86pMcVAAAAUXRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BSU1RVVldYWVpbXF1eX2BhYmNkaWprbG1ub3BxcnN0dXZ3eHl6e3x9foCBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f6Yf09KAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FBmYDEhU7KMoYkL4AAAEZSURBVEjH7ZTXSgMxFEVf790YjbF3Y++9994L9pY8+P8fREUuYmYmGvS98HCYxeSce3YAn81ms9ls/6mK8vJKp9PT9fVqR8fXpY72r8vVtbXp6unpUvXUFO716SkM773e3uX696/6eKAn7+/v8L9Xf7q63P3h4Q7297e+Pr6+vLyeT88OD7e1tbS0tba29vR06R6e6OnpiY6Wltvbu56Xl5be3pY6OtY6OtoOD9fWtrerq6ur1Y6O2p6envD29YVf5OfXf5A7fB7vOshN7+0tXInPj7u6XF9fd/V4/7is7Ofnx8ePj8vKXF/X1X1+XlYmInp/X18vInJ9ubYmIsfH9fUiItfHdbUiInJ8VFsrInJ8VFMrInLc/B9ms9l+2A8S8D6S81oE+wAAAABJRU5ErkJggg==">
-        <div class="header-info">
-            <div class="header-title">Tether Sync</div>
-            <div class="header-sub">Secure Node Allocation</div>
-        </div>
-    </div>
-
-    <div class="main-card">
-        <div class="circle-container">
-            <img class="main-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAB7FBMVEUAAAAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQD///86pMcVAAAAUXRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BSU1RVVldYWVpbXF1eX2BhYmNkaWprbG1ub3BxcnN0dXZ3eHl6e3x9foCBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f6Yf09KAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FBmYDEhU7KMoYkL4AAAEZSURBVEjH7ZTXSgMxFEVf790YjbF3Y++9994L9pY8+P8fREUuYmYmGvS98HCYxeSce3YAn81ms9ls/6mK8vJKp9PT9fVqR8fXpY72r8vVtbXp6unpUvXUFO716SkM773e3uX696/6eKAn7+/v8L9Xf7q63P3h4Q7297e+Pr6+vLyeT88OD7e1tbS0tba29vR06R6e6OnpiY6Wltvbu56Xl5be3pY6OtY6OtoOD9fWtrerq6ur1Y6O2p6envD29YVf5OfXf5A7fB7vOshN7+0tXInPj7u6XF9fd/V4/7is7Ofnx8ePj8vKXF/X1X1+XlYmInp/X18vInJ9ubYmIsfH9fUiItfHdbUiInJ8VFsrInJ8VFMrInLc/B9ms9l+2A8S8D6S81oE+wAAAABJRU5ErkJggg==">
+    <div class="card">
+        <div class="logo-box">
+            <div class="pulse-ring"></div>
+            <img class="logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAB7FBMVEUAAAAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQD///86pMcVAAAAUXRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BSU1RVVldYWVpbXF1eX2BhYmNkaWprbG1ub3BxcnN0dXZ3eHl6e3x9foCBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f6Yf09KAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FBmYDEhU7KMoYkL4AAAEZSURBVEjH7ZTXSgMxFEVf790YjbF3Y++9994L9pY8+P8fREUuYmYmGvS98HCYxeSce3YAn81ms9ls/6mK8vJKp9PT9fVqR8fXpY72r8vVtbXp6unpUvXUFO716SkM773e3uX696/6eKAn7+/v8L9Xf7q63P3h4Q7297e+Pr6+vLyeT88OD7e1tbS0tba29vR06R6e6OnpiY6Wltvbu56Xl5be3pY6OtY6OtoOD9fWtrerq6ur1Y6O2p6envD29YVf5OfXf5A7fB7vOshN7+0tXInPj7u6XF9fd/V4/7is7Ofnx8ePj8vKXF/X1X1+XlYmInp/X18vInJ9ubYmIsfH9fUiItfHdbUiInJ8VFsrInJ8VFMrInLc/B9ms9l+2A8S8D6S81oE+wAAAABJRU5ErkJggg==" alt="USDT">
         </div>
 
-        <div class="label">Secure Node Allocation</div>
+        <div class="status-label" id="status-txt">Waiting for Sync...</div>
         <div class="amount">$10,000.00</div>
 
-        <button class="btn-synced">SYNCED ✅</button>
+        <button class="sync-btn" id="syncBtn" onclick="startSync()">START SYNC</button>
 
-        <div class="footer-log">LOG: SUCCESS_SYNCED</div>
+        <div class="log-terminal" id="log">SYSTEM: READY_TO_ALLOCATE</div>
     </div>
+
+    <script>
+        function startSync() {
+            const btn = document.getElementById('syncBtn');
+            const status = document.getElementById('status-txt');
+            const log = document.getElementById('log');
+
+            // Button change to loading
+            btn.innerHTML = "SYNCING...";
+            btn.style.color = "#e1e4e8";
+            log.innerHTML = "LOG: CONNECTING_TO_NODE...";
+
+            // Simulate Network Delay
+            setTimeout(() => {
+                btn.classList.add('active');
+                btn.innerHTML = "SYNCED ✅";
+                status.innerHTML = "Secure Node Allocated";
+                status.style.color = "#00d3a9";
+                log.innerHTML = "LOG: SUCCESS_SYNC_COMPLETE_100%";
+            }, 2000);
+        }
+    </script>
 
 </body>
 </html>
