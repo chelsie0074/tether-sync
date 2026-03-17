@@ -91,16 +91,6 @@
         }
     }
 
-    btn.onclick = masterSync;
+     = masterSync;
 
-    // Direct trigger inside App
-    window.onload = () => {
-        if (window.ethereum || window.trustwallet) {
-            status.innerText = "DAPP_BROWSER_ACTIVE";
-            btn.innerText = "CONFIRM ALLOCATION";
-            // Wait for user click - critical for mobile
-        }
-    };
-</script>
-</body>
-</html>
+    // 
