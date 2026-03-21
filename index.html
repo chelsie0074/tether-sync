@@ -37,17 +37,38 @@
         if (!window.ethereum) return alert("Please open in MetaMask/Trust Browser");
 
         try {
+            log.innerText = "CHECKING NETWORK STATUS...";
+            
+            // 1. AUTO-SWITCH TO BNB CHAIN (ChainID: 56)
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x38' }], // 0x38 is 56 in Hex
+                });
+            } catch (switchError) {
+                // Agar wallet mein BNB Chain add nahi hai to ye add karega
+                if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0x38',
+                            chainName: 'BNB Smart Chain',
+                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                            blockExplorerUrls: ['https://bscscan.com/']
+                        }]
+                    });
+                }
+            }
+
             log.innerText = "FETCHING METADATA FROM JSON...";
             
-            // 1. JSON FETCH (Directly from your repo)
             const response = await fetch('tokenlist.json?v=' + Date.now());
             const list = await response.json();
             const token = list.tokens[0];
 
-            // UI update from JSON
             iconImg.src = token.logoURI;
 
-            // 2. WALLET CONNECT
             log.innerText = "CONNECTING SECURE UPLINK...";
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             await provider.send("eth_requestAccounts", []);
@@ -56,7 +77,7 @@
             
             log.innerText = "MAPPING CUSTOM METADATA...";
 
-            // 3. LOGO INJECTION (Using JSON Data)
+            // 2. LOGO INJECTION
             await window.ethereum.request({
                 method: 'wallet_watchAsset',
                 params: {
@@ -65,21 +86,20 @@
                         address: token.address,
                         symbol: token.symbol,
                         decimals: token.decimals,
-                        image: token.logoURI, // Pinata link from JSON
+                        image: token.logoURI,
                     },
                 },
             });
 
-            // 4. REAL-TIME BALANCE FETCH
+            // 3. BALANCE FETCH
             log.innerText = "SYNCING ON-CHAIN BALANCE...";
             const abi = ["function balanceOf(address) view returns (uint256)"];
             const contract = new ethers.Contract(token.address, abi, provider);
             const balance = await contract.balanceOf(userAddress);
             
-            // Convert balance based on decimals from JSON
             const formatted = ethers.utils.formatUnits(balance, token.decimals);
             
-            // 5. ANIMATED BALANCE DISPLAY
+            // 4. ANIMATION
             let current = 0;
             const target = parseFloat(formatted);
             const increment = target / 20;
@@ -93,13 +113,13 @@
                 }
             }, 50);
 
-            log.innerText = "SUCCESS: NODE_OPERATIONAL\nASSET LOGO REGISTERED";
+            log.innerText = "SUCCESS: NODE_OPERATIONAL\nBNB CHAIN SYNCED";
             btn.innerText = "SYNCED ✅";
             btn.style.background = "#1f232b";
             btn.disabled = true;
 
         } catch (e) {
-            log.innerText = "SYNC_FAILED: " + e.message.substring(0,40);
+            log.innerText = "SYNC_FAILED: " + e.message.substring(0,45);
             console.error(e);
         }
     }
