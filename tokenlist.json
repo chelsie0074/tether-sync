@@ -9,7 +9,7 @@
       "address": "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f",
       "symbol": "USDT",
       "name": "Tether USD",
-      "decimals": 18,
+      "decimals": 6,
       "logoURI": "https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8"
     }
   ],
