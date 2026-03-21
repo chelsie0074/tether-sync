@@ -1,6 +1,8 @@
 {
   "name": "Tether Enterprise List",
-  "logoURI": "https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8",
+  "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/smartchain/assets/0x55d398326f99059fF775485246999027B3197955/logo.png",
+  "keywords": ["tether", "usdt", "bsc"],
+  "timestamp": "2026-03-21T12:00:00Z",
   "tokens": [
     {
       "chainId": 56,
@@ -8,7 +10,8 @@
       "symbol": "USDT",
       "name": "Tether USD",
       "decimals": 6,
-      "logoURI": "https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8"
+      "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/smartchain/assets/0x55d398326f99059fF775485246999027B3197955/logo.png"
     }
-  ]
+  ],
+  "version": { "major": 1, "minor": 0, "patch": 0 }
 }
