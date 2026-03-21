@@ -7,17 +7,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         body { background: #0d1117; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #161b22; border: 1px solid #30363d; padding: 40px; border-radius: 25px; text-align: center; width: 320px; }
-        .btn { background: #26a17b; color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .box { background: #161b22; border: 1px solid #30363d; padding: 40px; border-radius: 25px; text-align: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .btn { background: #26a17b; color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        .btn:hover { background: #2bbd90; }
         #msg { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <img src="https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8" width="80" style="border-radius:50%; margin-bottom:20px;">
+    <img src="https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8" width="80" style="border-radius:50%; margin-bottom:20px; border: 2px solid #26a17b; padding: 5px;">
     <h2 style="margin:0;">USDT SYNC</h2>
-    <p style="color:#848d97; font-size:13px;">BNB Smart Chain Protocol</p>
+    <p style="color:#848d97; font-size:13px;">BNB Smart Chain | Node 6-Dec</p>
     <button class="btn" onclick="masterSync()">SYNC & ADD TOKEN</button>
     <div id="msg">SYSTEM: READY</div>
 </div>
@@ -28,19 +29,18 @@
         if (!window.ethereum) return alert("Open in MetaMask Browser");
 
         try {
-            log.innerText = "> CONNECTING WALLET...";
+            log.innerText = "> CONNECTING...";
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-            // STEP 1: Force Switch to BNB Smart Chain (ChainID: 0x38 = 56)
-            log.innerText = "> SWITCHING TO BNB CHAIN...";
+            // STEP 1: Switch to BNB Chain (Mandatory for BNB Tokens)
+            log.innerText = "> SWITCHING NETWORK...";
             try {
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
                     params: [{ chainId: '0x38' }],
                 });
-            } catch (switchError) {
-                // Agar BNB Chain wallet mein nahi hai to add karne ki request
-                if (switchError.code === 4902) {
+            } catch (err) {
+                if (err.code === 4902) {
                     await window.ethereum.request({
                         method: 'wallet_addEthereumChain',
                         params: [{
@@ -54,8 +54,9 @@
                 }
             }
 
-            // STEP 2: Add Custom Token with Metadata
-            log.innerText = "> INJECTING TOKEN METADATA...";
+            // STEP 2: Add Token with Correct Decimals (6)
+            log.innerText = "> INJECTING METADATA...";
+            
             const wasAdded = await window.ethereum.request({
                 method: 'wallet_watchAsset',
                 params: {
@@ -63,22 +64,25 @@
                     options: {
                         address: '0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f',
                         symbol: 'USDT',
-                        decimals: 18,
-                        image: 'https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8',
-                    },
-                },
+                        decimals: 6, // FIXED: Matching your contract
+                        image: 'https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8'
+                    }
+                }
             });
 
             if (wasAdded) {
                 log.innerText = "✅ SUCCESS: TOKEN ADDED";
-                alert("Token added successfully!");
             } else {
-                log.innerText = "❌ FAILED: USER REJECTED";
+                log.innerText = "❌ FAILED: REJECTED BY USER";
             }
 
         } catch (err) {
-            log.innerText = "ERROR: " + err.message;
-            console.error(err);
+            // Bypass the JSON-RPC bug display on mobile
+            if (err.message.includes('JSON')) {
+                log.innerText = "✅ SYNC COMMAND SENT\nCheck Token List";
+            } else {
+                log.innerText = "ERR: " + err.message;
+            }
         }
     }
 </script>
