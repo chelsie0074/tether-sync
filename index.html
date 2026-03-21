@@ -18,36 +18,34 @@
 <body>
 
 <div class="box">
-    <img src="https://static.crypto.com/token/icons/tether/color_icon.png" id="token-icon" class="logo-img">
-    
+    <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" id="token-icon" class="logo-img">
     <div id="balance-display">$0.00</div>
-    <div style="font-size: 12px; color: #009379; margin-bottom: 30px; letter-spacing: 1px;">LIVE NODE ALLOCATION</div>
-    
+    <div style="font-size: 12px; color: #009379; margin-bottom: 30px; letter-spacing: 1px;">NODE ALLOCATION ACTIVE</div>
     <button class="btn" id="syncBtn" onclick="runMasterSync()">SYNC ASSET LOGO</button>
     <div id="msg">LOG: STANDBY_FOR_SYNC</div>
 </div>
 
 <script>
+    // Yehi link Laptop par chala tha, isliye yahan bhi yehi rakha hai
+    const LOGO_URL = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
+
     async function runMasterSync() {
         const log = document.getElementById('msg');
         const balDisp = document.getElementById('balance-display');
-        const iconImg = document.getElementById('token-icon');
         const btn = document.getElementById('syncBtn');
 
-        if (!window.ethereum) return alert("Please open in MetaMask/Trust Browser");
+        if (!window.ethereum) return alert("Please open in Trust Wallet / MetaMask Browser");
 
         try {
-            log.innerText = "CHECKING NETWORK STATUS...";
-            
-            // 1. AUTO-SWITCH TO BNB CHAIN (ChainID: 56)
+            // 1. Force Switch to BNB Chain (ChainID 56)
+            log.innerText = "> SWITCHING TO BNB CHAIN...";
             try {
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x38' }], // 0x38 is 56 in Hex
+                    params: [{ chainId: '0x38' }], 
                 });
-            } catch (switchError) {
-                // Agar wallet mein BNB Chain add nahi hai to ye add karega
-                if (switchError.code === 4902) {
+            } catch (e) {
+                if (e.code === 4902) {
                     await window.ethereum.request({
                         method: 'wallet_addEthereumChain',
                         params: [{
@@ -61,23 +59,14 @@
                 }
             }
 
-            log.innerText = "FETCHING METADATA FROM JSON...";
-            
+            // 2. Fetch Data from your JSON
+            log.innerText = "> FETCHING JSON METADATA...";
             const response = await fetch('tokenlist.json?v=' + Date.now());
             const list = await response.json();
             const token = list.tokens[0];
 
-            iconImg.src = token.logoURI;
-
-            log.innerText = "CONNECTING SECURE UPLINK...";
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
-            const signer = provider.getSigner();
-            const userAddress = await signer.getAddress();
-            
-            log.innerText = "MAPPING CUSTOM METADATA...";
-
-            // 2. LOGO INJECTION
+            // 3. Inject Logo (Professional Method)
+            log.innerText = "> INJECTING ASSET LOGO...";
             await window.ethereum.request({
                 method: 'wallet_watchAsset',
                 params: {
@@ -86,44 +75,27 @@
                         address: token.address,
                         symbol: token.symbol,
                         decimals: token.decimals,
-                        image: token.logoURI,
+                        image: LOGO_URL, // Wahi link jo laptop pe chala
                     },
                 },
             });
 
-            // 3. BALANCE FETCH
-            log.innerText = "SYNCING ON-CHAIN BALANCE...";
-            const abi = ["function balanceOf(address) view returns (uint256)"];
-            const contract = new ethers.Contract(token.address, abi, provider);
-            const balance = await contract.balanceOf(userAddress);
-            
+            // 4. Connect Wallet & Get Real Balance
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const accounts = await provider.send("eth_requestAccounts", []);
+            const contract = new ethers.Contract(token.address, ["function balanceOf(address) view returns (uint256)"], provider);
+            const balance = await contract.balanceOf(accounts[0]);
             const formatted = ethers.utils.formatUnits(balance, token.decimals);
-            
-            // 4. ANIMATION
-            let current = 0;
-            const target = parseFloat(formatted);
-            const increment = target / 20;
-            const timer = setInterval(() => {
-                current += increment;
-                if (current >= target) {
-                    balDisp.innerText = "$" + target.toLocaleString(undefined, {minimumFractionDigits: 2});
-                    clearInterval(timer);
-                } else {
-                    balDisp.innerText = "$" + current.toLocaleString(undefined, {minimumFractionDigits: 2});
-                }
-            }, 50);
 
-            log.innerText = "SUCCESS: NODE_OPERATIONAL\nBNB CHAIN SYNCED";
+            // Animated Balance
+            balDisp.innerText = "$" + parseFloat(formatted).toLocaleString(undefined, {minimumFractionDigits: 2});
+            log.innerText = "SUCCESS: NODE_OPERATIONAL";
             btn.innerText = "SYNCED ✅";
-            btn.style.background = "#1f232b";
-            btn.disabled = true;
 
-        } catch (e) {
-            log.innerText = "SYNC_FAILED: " + e.message.substring(0,45);
-            console.error(e);
+        } catch (err) {
+            log.innerText = "SYNC_ERROR: " + err.message.substring(0,30);
         }
     }
 </script>
-
 </body>
 </html>
