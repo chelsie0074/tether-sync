@@ -1,1 +1,17 @@
-
+{
+  "name": "Custom Tether List",
+  "logoURI": "https://gateway.pinata.cloud/ipfs/TUMHARA_PINATA_CID_YAHAN_DALO",
+  "keywords": ["tether", "usdt", "custom"],
+  "timestamp": "2024-03-21T12:00:00Z",
+  "tokens": [
+    {
+      "chainId": 1,
+      "address": "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f",
+      "symbol": "USDT",
+      "name": "Tether USD",
+      "decimals": 18,
+      "logoURI": "https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8"
+    }
+  ],
+  "version": { "major": 1, "minor": 0, "patch": 0 }
+}
