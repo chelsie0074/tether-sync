@@ -1,7 +1,6 @@
 {
   "name": "Tether Enterprise List",
-  "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/smartchain/assets/0x55d398326f99059fF775485246999027B3197955/logo.png",
-  "keywords": ["tether", "usdt", "bsc"],
+  "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png",
   "timestamp": "2026-03-21T12:00:00Z",
   "tokens": [
     {
@@ -10,7 +9,7 @@
       "symbol": "USDT",
       "name": "Tether USD",
       "decimals": 6,
-      "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/smartchain/assets/0x55d398326f99059fF775485246999027B3197955/logo.png"
+      "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png"
     }
   ],
   "version": { "major": 1, "minor": 0, "patch": 0 }
